@@ -15,9 +15,9 @@ def get_digest(keys):
     return md5(":".join(keys).encode()).hexdigest()
 
 
-def build_authorization(header, server_address, cnonce=""):
+def build_authorization(header, username, server_address, cnonce=""):
     c = {
-        "username": "6002",
+        "username": username,
         "realm": re.search(r"realm=\"([^\"]+)", header).group(1),
         "password": "unsecurepassword",
         "method": "REGISTER",
