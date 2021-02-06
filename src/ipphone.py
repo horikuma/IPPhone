@@ -63,7 +63,7 @@ def main():
         r"WWW-Authenticate: ([^\r\n]+)",
         recv_message.decode()
     ).group(1)
-    authorization = lib.build_authorization(www_authenticate, server_address)
+    authorization = lib.build_authorization(www_authenticate, "6002", server_address)
     send_message = second_send_message_template.replace(
         "<server_address>",
         server_address
