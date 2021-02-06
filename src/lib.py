@@ -15,19 +15,24 @@ def get_digest(keys):
     return md5(":".join(keys).encode()).hexdigest()
 
 
-def build_authorization(header, username, server_address, cnonce=""):
+def parse_header(header):
+    result = {}
+    kind, params = header.split(" ", 1)
+    if not "Digest" == kind:
+        return result
+
+    for param in params.replace("\"", "").split(","):
+        k, v = [x.strip() for x in param.split("=")]
+        result[k] = v
+    return result
+
+
+def build_authorization(config):
     c = {
-        "username": username,
-        "realm": re.search(r"realm=\"([^\"]+)", header).group(1),
-        "password": "unsecurepassword",
-        "method": "REGISTER",
-        "uri": f"sip:asterisk@{server_address}:5060",
-        "nonce": re.search(r"nonce=\"([^\"]+)", header).group(1),
         "nc": "00000001",
-        "cnonce": cnonce if cnonce else key(10),
-        "qop": re.search(r"qop=\"([^\"]+)", header).group(1),
-        "algorithm": "md5"
+        "cnonce": key(10),
     }
+    c.update(config)
 
     # A1 = ユーザ名 ":" realm ":" パスワード
     a1 = get_digest([c["username"], c["realm"], c["password"]])

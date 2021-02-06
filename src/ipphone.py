@@ -63,7 +63,14 @@ def main():
         r"WWW-Authenticate: ([^\r\n]+)",
         recv_message.decode()
     ).group(1)
-    authorization = lib.build_authorization(www_authenticate, "6002", server_address)
+    authorization_config = lib.parse_header(www_authenticate)
+    authorization_config.update({
+        "method": "REGISTER",
+        "username": "6002",
+        "password": "unsecurepassword",
+        "uri": f"sip:asterisk@{server_address}:5060",
+    })
+    authorization = lib.build_authorization(authorization_config)
     send_message = second_send_message_template.replace(
         "<server_address>",
         server_address
