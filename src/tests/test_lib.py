@@ -11,6 +11,44 @@ def test_get_digest():
     assert result == expected
 
 
+def test_parse_message():
+    message = '\r\n'.join((
+        'REGISTER sip:asterisk@172.19.248.182:5060 SIP/2.0',
+        'Via: SIP/2.0/UDP 172.19.248.182:5061;rport;branch=z9hG4bKPj8r3zuDr3OihPEKr.lBRC3oTOnMGLZ1gv',
+        'Max-Forwards: 70',
+        'From: <sip:6001@172.19.248.182>;tag=zabqXFceFM2bA1aSZv3Z9l8ZgTUBX1dp',
+        'To: <sip:6001@172.19.248.182>',
+        'Call-ID: JBvkA0faJxAw1OvWwUxs3heCvqbcLV7F',
+        'CSeq: 8088 REGISTER',
+        'User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31',
+        'Contact: <sip:6001@172.19.248.182:5061;ob>',
+        'Expires: 300',
+        'Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS',
+        'Content-Length:  0',
+        '',
+        '',
+    ))
+    expected = {
+        'start-line': 'REGISTER sip:asterisk@172.19.248.182:5060 SIP/2.0',
+        'header': {
+            'Via': 'SIP/2.0/UDP 172.19.248.182:5061;rport;branch=z9hG4bKPj8r3zuDr3OihPEKr.lBRC3oTOnMGLZ1gv',
+            'Max-Forwards': '70',
+            'From': '<sip:6001@172.19.248.182>;tag=zabqXFceFM2bA1aSZv3Z9l8ZgTUBX1dp',
+            'To': '<sip:6001@172.19.248.182>',
+            'Call-ID': 'JBvkA0faJxAw1OvWwUxs3heCvqbcLV7F',
+            'CSeq': '8088 REGISTER',
+            'User-Agent': 'PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31',
+            'Contact': '<sip:6001@172.19.248.182:5061;ob>',
+            'Expires': '300',
+            'Allow': 'PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS',
+            'Content-Length': '0'
+        },
+        'body': ''
+    }
+    result = lib.parse_message(message)
+    assert result == expected
+
+
 def test_parse_header():
     header = 'Digest realm="asterisk",nonce="1612524413/8a70ffe177df36117558872417f672f5",opaque="5e0e706065fbdb2f",algorithm=md5,qop="auth"'
     expected = {

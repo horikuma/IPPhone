@@ -57,13 +57,11 @@ def main():
         remote_address
     )
     recv_message, recv_address = sock.recvfrom(1024)
-    print(recv_message.decode())
+    recv_message = recv_message.decode()
+    print(recv_message)
 
-    www_authenticate = re.search(
-        r"WWW-Authenticate: ([^\r\n]+)",
-        recv_message.decode()
-    ).group(1)
-    authorization_config = lib.parse_header(www_authenticate)
+    recv_message = lib.parse_message(recv_message)
+    authorization_config = lib.parse_header(recv_message["header"]["WWW-Authenticate"])
     authorization_config.update({
         "method": "REGISTER",
         "username": "6002",
@@ -88,7 +86,8 @@ def main():
         remote_address
     )
     recv_message, recv_address = sock.recvfrom(1024)
-    print(recv_message.decode())
+    recv_message = recv_message.decode()
+    print(recv_message)
 
 if __name__ == "__main__":
     main()

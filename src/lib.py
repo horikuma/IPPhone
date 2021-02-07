@@ -15,6 +15,24 @@ def get_digest(keys):
     return md5(":".join(keys).encode()).hexdigest()
 
 
+def parse_message(message):
+    message_header_row, message_body_raw = message.split('\r\n\r\n')
+    start_line_raw, *message_header_raw = message_header_row.split('\r\n')
+
+    message_header = {}
+    for h in message_header_raw:
+        k, v = [x.strip() for x in h.split(":", 1)]
+        message_header[k] = v
+
+    result = {
+        'start-line': start_line_raw,
+        'header': message_header,
+        'body': message_body_raw,
+    }
+
+    return result
+
+
 def parse_header(header):
     result = {}
     kind, params = header.split(" ", 1)
@@ -29,7 +47,7 @@ def parse_header(header):
 
 def build_authorization(config):
     c = {
-        "nc": "00000001",
+        "nc": "00000001", # TODO
         "cnonce": key(10),
     }
     c.update(config)
