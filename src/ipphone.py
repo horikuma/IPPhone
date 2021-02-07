@@ -5,7 +5,7 @@ import sys
 import re
 import lib
 
-first_send_message_template = """\
+first_send_message_template = '''\
 REGISTER sip:asterisk@<server_address>:5060 SIP/2.0
 Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bKPjEMKNT1arBd1xzjzfSCDYJAqS-1U1vqOl
 Max-Forwards: 70
@@ -18,9 +18,9 @@ Contact: <sip:6002@<server_address>:5061;ob>
 Expires: 300
 Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS
 Content-Length:  0
-"""
+'''
 
-second_send_message_template = """\
+second_send_message_template = '''\
 REGISTER sip:asterisk@<server_address>:5060 SIP/2.0
 Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bKPjEMKNT1arBd1xzjzfSCDYJAqS-1U1vqOl
 Max-Forwards: 70
@@ -34,7 +34,7 @@ Expires: 300
 Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS
 Authorization: <authorization>
 Content-Length:  0
-"""
+'''
 
 
 def main():
@@ -44,8 +44,8 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     send_message = lib.replace_all(first_send_message_template, {
-        "server_address": server_address,
-        "cseq_number": "1",
+        'server_address': server_address,
+        'cseq_number': '1',
     })
 
     print(send_message)
@@ -58,18 +58,18 @@ def main():
     print(recv_message)
 
     recv_message = lib.parse_message(recv_message)
-    authorization_config = lib.parse_header(recv_message["header"]["WWW-Authenticate"])
+    authorization_config = lib.parse_header(recv_message['header']['WWW-Authenticate'])
     authorization_config.update({
-        "method": "REGISTER",
-        "username": "6002",
-        "password": "unsecurepassword",
-        "uri": f"sip:asterisk@{server_address}:5060",
+        'method': 'REGISTER',
+        'username': '6002',
+        'password': 'unsecurepassword',
+        'uri': f'sip:asterisk@{server_address}:5060',
     })
     authorization = lib.build_authorization(authorization_config)
     send_message = lib.replace_all(second_send_message_template, {
-        "server_address": server_address,
-        "cseq_number": "2",
-        "authorization": authorization,
+        'server_address': server_address,
+        'cseq_number': '2',
+        'authorization': authorization,
     })
 
     print(send_message)
@@ -81,5 +81,5 @@ def main():
     recv_message = recv_message.decode()
     print(recv_message)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
