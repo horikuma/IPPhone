@@ -43,13 +43,10 @@ def main():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    send_message = first_send_message_template.replace(
-        "<server_address>",
-        server_address
-    ).replace(
-        "<cseq_number>",
-        "1"
-    )
+    send_message = lib.replace_all(first_send_message_template, {
+        "server_address": server_address,
+        "cseq_number": "1",
+    })
 
     print(send_message)
     send_length = sock.sendto(
@@ -69,16 +66,11 @@ def main():
         "uri": f"sip:asterisk@{server_address}:5060",
     })
     authorization = lib.build_authorization(authorization_config)
-    send_message = second_send_message_template.replace(
-        "<server_address>",
-        server_address
-    ).replace(
-        "<cseq_number>",
-        "2"
-    ).replace(
-        "<authorization>",
-        authorization
-    )
+    send_message = lib.replace_all(second_send_message_template, {
+        "server_address": server_address,
+        "cseq_number": "2",
+        "authorization": authorization,
+    })
 
     print(send_message)
     send_length = sock.sendto(
