@@ -89,3 +89,10 @@ def test_build_authorization(params, expected):
 
     result = lib.build_authorization(authorization_config)
     assert re.search(r"response=\"([^\"]+)", result).group(1) == expected
+
+
+def test_replace_all():
+    expected = "A <b> C A"
+    result = lib.replace_all("<a> <b> <c> <a>", {"a": "A", "c": "C", "d": "D"})
+
+    assert result == expected

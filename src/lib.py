@@ -16,8 +16,8 @@ def get_digest(keys):
 
 
 def parse_message(message):
-    message_header_row, message_body_raw = message.split('\r\n\r\n')
-    start_line_raw, *message_header_raw = message_header_row.split('\r\n')
+    message_header_raw, message_body_raw = message.split('\r\n\r\n')
+    start_line_raw, *message_header_raw = message_header_raw.split('\r\n')
 
     message_header = {}
     for h in message_header_raw:
@@ -65,15 +65,12 @@ def build_authorization(config):
         c["qop"],
         a2
     ])
-    authorization_keys = [
-        "username",
-        "realm",
-        "uri",
-        "nonce",
-        "nc",
-        "cnonce",
-        "qop",
-        "algorithm",
-        "response",
-    ]
-    return "Digest " + ", ".join([f"{k}=\"{c[k]}\"" for k in authorization_keys])
+    template = 'Digest username="<username>", realm="<realm>", uri="<uri>", nonce="<nonce>", nc="<nc>", cnonce="<cnonce>", qop="<qop>", algorithm=<algorithm>, response="<response>", opaque="<opaque>"'
+    return replace_all(template, c)
+
+
+def replace_all(source, config):
+    result = source
+    for k, v in config.items():
+        result = result.replace(f'<{k}>', v)
+    return result
