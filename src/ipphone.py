@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import re
 import socket
 import sys
-import re
+import threading
+
+import event
 import lib
 
 first_send_message_template = '''\
@@ -37,7 +40,15 @@ Content-Length:  0
 '''
 
 
-def main():
+def cmd():
+    c = input()
+    if '+a' == c:
+        event.put('regist')
+    if 'exit' == c:
+        exit()
+
+
+def regist(params):
     server_address = sys.argv[1]
     remote_address = (server_address, 5060)
 
@@ -58,7 +69,9 @@ def main():
     print(recv_message)
 
     recv_message = lib.parse_message(recv_message)
-    authorization_config = lib.parse_header(recv_message['header']['WWW-Authenticate'])
+    authorization_config = lib.parse_header(
+        recv_message['header']['WWW-Authenticate']
+    )
     authorization_config.update({
         'method': 'REGISTER',
         'username': '6002',
@@ -80,6 +93,15 @@ def main():
     recv_message, recv_address = sock.recvfrom(1024)
     recv_message = recv_message.decode()
     print(recv_message)
+
+
+def main():
+    event.init()
+    event.regist('regist', regist)
+    threading.Thread(target=event.main, daemon=True).start()
+    while True:
+        cmd()
+
 
 if __name__ == '__main__':
     main()
