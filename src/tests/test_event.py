@@ -27,6 +27,21 @@ def test_event_once():
     assert result == expected
 
 
+def test_event_dual():
+    result.clear()
+
+    expected = [('stub1', ('first', )), ('stub1', ('second', ))]
+
+    event.init()
+    event.regist('a', stub1)
+    event.put('a', ('first', ))
+    event.put('a', ('second', ))
+    event.exec()
+    event.exec()
+
+    assert result == expected
+
+
 # def test_event_double():
 #     expected = [
 #         ('stub1', ('first', )),
