@@ -39,6 +39,10 @@ Authorization: <authorization>
 Content-Length:  0
 '''
 
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server_address = None
+remote_address = None
+
 
 def cmd():
     c = input()
@@ -48,26 +52,37 @@ def cmd():
         exit()
 
 
-def regist(params):
-    server_address = sys.argv[1]
-    remote_address = (server_address, 5060)
+def recv():
+    while True:
+        message, address = sock.recvfrom(1024)
+        message = message.decode()
+        event.put('recv_response', (message, address))
+        print(message)
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+def send(params):
+    message, address = params
+    sock.sendto(message.encode(), address)
+    print(message)
+
+
+def register_regist(params):
     send_message = lib.replace_all(first_send_message_template, {
         'server_address': server_address,
-        'cseq_number': '1',
+        'cseq_number': 1,
     })
+    event.put('send_request', (send_message, remote_address))
 
-    print(send_message)
-    send_length = sock.sendto(
-        send_message.encode(),
-        remote_address
-    )
-    recv_message, recv_address = sock.recvfrom(1024)
-    recv_message = recv_message.decode()
-    print(recv_message)
 
+def register_recv_response(params):
+    if not hasattr(register_recv_response, 'count'):
+        register_recv_response.count = 1
+
+    if 1 < register_recv_response.count:
+        return
+    register_recv_response.count += 1
+
+    recv_message = params[0]
     recv_message = lib.parse_message(recv_message)
     authorization_config = lib.parse_header(
         recv_message['header']['WWW-Authenticate']
@@ -81,23 +96,24 @@ def regist(params):
     authorization = lib.build_authorization(authorization_config)
     send_message = lib.replace_all(second_send_message_template, {
         'server_address': server_address,
-        'cseq_number': '2',
+        'cseq_number': 2,
         'authorization': authorization,
     })
-
-    print(send_message)
-    send_length = sock.sendto(
-        send_message.encode(),
-        remote_address
-    )
-    recv_message, recv_address = sock.recvfrom(1024)
-    recv_message = recv_message.decode()
-    print(recv_message)
+    event.put('send_request', (send_message, remote_address))
 
 
 def main():
+    global server_address
+    global remote_address
+    
+    server_address = sys.argv[1]
+    remote_address = (server_address, 5060)
+
     event.init()
-    event.regist('regist', regist)
+    event.regist('regist', register_regist)
+    event.regist('recv_response', register_recv_response)
+    event.regist('send_request', send)
+    threading.Thread(target=recv, daemon=True).start()
     threading.Thread(target=event.main, daemon=True).start()
     while True:
         cmd()

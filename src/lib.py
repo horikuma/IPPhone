@@ -72,5 +72,5 @@ def build_authorization(config):
 def replace_all(source, config):
     result = source
     for k, v in config.items():
-        result = result.replace(f'<{k}>', v)
+        result = result.replace(f'<{k}>', str(v))
     return result
