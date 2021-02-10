@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import re
-import socket
 import sys
 import threading
 
+import com
+import drv
 import event
 import lib
 
@@ -39,7 +40,6 @@ Authorization: <authorization>
 Content-Length:  0
 '''
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_address = None
 remote_address = None
 
@@ -50,20 +50,6 @@ def cmd():
         event.put('regist')
     if 'exit' == c:
         exit()
-
-
-def recv():
-    while True:
-        message, address = sock.recvfrom(1024)
-        message = message.decode()
-        event.put('recv_response', (message, address))
-        print(message)
-
-
-def send(params):
-    message, address = params
-    sock.sendto(message.encode(), address)
-    print(message)
 
 
 def register_regist(params):
@@ -105,15 +91,18 @@ def register_recv_response(params):
 def main():
     global server_address
     global remote_address
-    
+
     server_address = sys.argv[1]
     remote_address = (server_address, 5060)
 
     event.init()
     event.regist('regist', register_regist)
     event.regist('recv_response', register_recv_response)
-    event.regist('send_request', send)
-    threading.Thread(target=recv, daemon=True).start()
+
+    com.init()
+    drv.init((server_address, 5061))
+
+    threading.Thread(target=drv.recv, daemon=True).start()
     threading.Thread(target=event.main, daemon=True).start()
     while True:
         cmd()
