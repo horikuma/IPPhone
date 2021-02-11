@@ -53,11 +53,15 @@ def cmd():
 
 
 def register_regist(params):
-    send_message = lib.replace_all(first_send_message_template, {
+    send_frame = {
         'server_address': server_address,
         'cseq_number': 1,
-    })
-    event.put('send_request', (send_message, remote_address))
+    }
+    event.put('send_request', (
+        send_frame,
+        remote_address,
+        first_send_message_template
+    ))
 
 
 def register_recv_response(params):
@@ -68,10 +72,9 @@ def register_recv_response(params):
         return
     register_recv_response.count += 1
 
-    recv_message = params[0]
-    recv_message = lib.parse_message(recv_message)
+    recv_frame = params[0]
     authorization_config = lib.parse_header(
-        recv_message['header']['WWW-Authenticate']
+        recv_frame['header']['WWW-Authenticate']
     )
     authorization_config.update({
         'method': 'REGISTER',
@@ -80,12 +83,16 @@ def register_recv_response(params):
         'uri': f'sip:asterisk@{server_address}:5060',
     })
     authorization = lib.build_authorization(authorization_config)
-    send_message = lib.replace_all(second_send_message_template, {
+    send_frame = {
         'server_address': server_address,
         'cseq_number': 2,
         'authorization': authorization,
-    })
-    event.put('send_request', (send_message, remote_address))
+    }
+    event.put('send_request', (
+        send_frame,
+        remote_address,
+        second_send_message_template
+    ))
 
 
 def main():
