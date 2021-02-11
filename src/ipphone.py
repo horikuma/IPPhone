@@ -9,37 +9,6 @@ import drv
 import event
 import lib
 
-first_send_message_template = '''\
-REGISTER sip:asterisk@<server_address>:5060 SIP/2.0
-Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bKPjEMKNT1arBd1xzjzfSCDYJAqS-1U1vqOl
-Max-Forwards: 70
-From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu
-To: <sip:6002@<server_address>>
-Call-ID: deUH4-p2IpimBfdJvwFAHH8EVJRay1BU
-CSeq: <cseq_number> REGISTER
-User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31
-Contact: <sip:6002@<server_address>:5061;ob>
-Expires: 300
-Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS
-Content-Length:  0
-'''
-
-second_send_message_template = '''\
-REGISTER sip:asterisk@<server_address>:5060 SIP/2.0
-Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bKPjEMKNT1arBd1xzjzfSCDYJAqS-1U1vqOl
-Max-Forwards: 70
-From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu
-To: <sip:6002@<server_address>>
-Call-ID: deUH4-p2IpimBfdJvwFAHH8EVJRay1BU
-CSeq: <cseq_number> REGISTER
-User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31
-Contact: <sip:6002@<server_address>:5061;ob>
-Expires: 300
-Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS
-Authorization: <authorization>
-Content-Length:  0
-'''
-
 server_address = None
 remote_address = None
 
@@ -56,11 +25,11 @@ def register_regist(params):
     send_frame = {
         'server_address': server_address,
         'cseq_number': 1,
+        'authorization': '',
     }
     event.put('send_request', (
         send_frame,
         remote_address,
-        first_send_message_template
     ))
 
 
@@ -91,7 +60,6 @@ def register_recv_response(params):
     event.put('send_request', (
         send_frame,
         remote_address,
-        second_send_message_template
     ))
 
 
