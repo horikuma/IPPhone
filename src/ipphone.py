@@ -9,37 +9,6 @@ import drv
 import event
 import lib
 
-first_send_message_template = '''\
-REGISTER sip:asterisk@<server_address>:5060 SIP/2.0
-Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bKPjEMKNT1arBd1xzjzfSCDYJAqS-1U1vqOl
-Max-Forwards: 70
-From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu
-To: <sip:6002@<server_address>>
-Call-ID: deUH4-p2IpimBfdJvwFAHH8EVJRay1BU
-CSeq: <cseq_number> REGISTER
-User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31
-Contact: <sip:6002@<server_address>:5061;ob>
-Expires: 300
-Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS
-Content-Length:  0
-'''
-
-second_send_message_template = '''\
-REGISTER sip:asterisk@<server_address>:5060 SIP/2.0
-Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bKPjEMKNT1arBd1xzjzfSCDYJAqS-1U1vqOl
-Max-Forwards: 70
-From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu
-To: <sip:6002@<server_address>>
-Call-ID: deUH4-p2IpimBfdJvwFAHH8EVJRay1BU
-CSeq: <cseq_number> REGISTER
-User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31
-Contact: <sip:6002@<server_address>:5061;ob>
-Expires: 300
-Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS
-Authorization: <authorization>
-Content-Length:  0
-'''
-
 server_address = None
 remote_address = None
 
@@ -53,11 +22,15 @@ def cmd():
 
 
 def register_regist(params):
-    send_message = lib.replace_all(first_send_message_template, {
+    send_frame = {
         'server_address': server_address,
         'cseq_number': 1,
-    })
-    event.put('send_request', (send_message, remote_address))
+        'authorization': '',
+    }
+    event.put('send_request', (
+        send_frame,
+        remote_address,
+    ))
 
 
 def register_recv_response(params):
@@ -68,10 +41,9 @@ def register_recv_response(params):
         return
     register_recv_response.count += 1
 
-    recv_message = params[0]
-    recv_message = lib.parse_message(recv_message)
+    recv_frame = params[0]
     authorization_config = lib.parse_header(
-        recv_message['header']['WWW-Authenticate']
+        recv_frame['header']['WWW-Authenticate']
     )
     authorization_config.update({
         'method': 'REGISTER',
@@ -80,12 +52,15 @@ def register_recv_response(params):
         'uri': f'sip:asterisk@{server_address}:5060',
     })
     authorization = lib.build_authorization(authorization_config)
-    send_message = lib.replace_all(second_send_message_template, {
+    send_frame = {
         'server_address': server_address,
         'cseq_number': 2,
         'authorization': authorization,
-    })
-    event.put('send_request', (send_message, remote_address))
+    }
+    event.put('send_request', (
+        send_frame,
+        remote_address,
+    ))
 
 
 def main():
