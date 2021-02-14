@@ -16,7 +16,6 @@ class Register:
         send_frame = {
             'server_address': self.server_address,
             'cseq_number': 1,
-            'authorization': '',
         }
         event.put('send_request', (
             send_frame,
@@ -43,6 +42,7 @@ class Register:
             'server_address': self.server_address,
             'cseq_number': 2,
             'authorization': authorization,
+            'add_header': {'Authorization', 'Expires', 'Contact'}
         }
         event.put('send_request', (
             send_frame,

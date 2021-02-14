@@ -30,7 +30,18 @@ headder_priority = [
     'Max-Forwards',
     'Via',
     'Authorization',
+    'Expires',
+    'Contact',
 ]
+
+default_headers = {
+    'To',
+    'From',
+    'CSeq',
+    'Call-ID',
+    'Max-Forwards',
+    'Via',
+}
 
 
 def sip_recv(params):
@@ -45,7 +56,14 @@ def sip_send(params):
     template_message = lib.replace_all(request_message_template, frame)
     template_frame = lib.parse_message(template_message)
     header = ''
+    headers = default_headers.copy()
+    if 'add_header' in frame:
+        headers |= frame['add_header']
+    if 'remove_header' in frame:
+        headers -= frame['remove_header']
     for h in headder_priority:
+        if not h in headers:
+            continue
         if not h in template_frame['header']:
             continue
         if not template_frame['header'][h]:
