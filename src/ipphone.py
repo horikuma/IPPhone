@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import threading
 
@@ -18,7 +19,7 @@ def cmd():
 
 
 def main():
-    server_address = sys.argv[1]
+    server_address = os.environ['SERVER_ADDRESS']
     remote_address = (server_address, 5060)
 
     event.init()
