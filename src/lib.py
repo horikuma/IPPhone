@@ -5,6 +5,8 @@ import re
 import string
 from hashlib import md5
 
+from transitions import Machine
+
 
 def key(length):
     c = string.ascii_lowercase + string.ascii_uppercase + string.digits
@@ -47,7 +49,7 @@ def parse_header(header):
 
 def build_authorization(config):
     c = {
-        'nc': '00000001', # TODO
+        'nc': '00000001',  # TODO
         'cnonce': key(10),
     }
     c.update(config)
@@ -74,3 +76,24 @@ def replace_all(source, config):
     for k, v in config.items():
         result = result.replace(f'<{k}>', str(v))
     return result
+
+
+def build_statemachine(model, states):
+    sm = Machine(
+        model=model,
+        states=states,
+        initial=states[0],
+        ignore_invalid_triggers=True,)
+
+    for symbol in dir(model):
+        match = re.match(r'(\w+)__(\w+)', symbol, flags=re.ASCII)
+        if not match:
+            continue
+        state, event = match.groups()
+        sm.add_transition(
+            trigger=event,
+            source=state,
+            dest=None,
+            after=symbol)
+
+    return sm

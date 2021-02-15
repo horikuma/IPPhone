@@ -6,12 +6,12 @@ import event
 result = []
 
 
-def stub1(params):
+def stub1(event_id, params):
     global result
     result.append(('stub1', params))
 
 
-def stub2(params):
+def stub2(event_id, params):
     global result
     result.append(('stub2', params))
 

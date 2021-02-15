@@ -15,7 +15,7 @@ def recv():
         print(message)
 
 
-def send(params):
+def send(event_id, params):
     message, address = params
     sock.sendto(message.encode(), address)
     print(message)
