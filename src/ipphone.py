@@ -14,7 +14,7 @@ def cmd():
     c = input()
     if '+a' == c:
         event.put('regist')
-    if 'exit' == c:
+    if 'q' == c:
         exit()
 
 

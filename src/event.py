@@ -34,7 +34,7 @@ def exec():
     while event_hook:
         _, h = heapq.heappop(event_hook)
         # print(event_id)
-        h(params)
+        h(event_id, params)
 
 
 def main():
