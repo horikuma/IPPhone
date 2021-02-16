@@ -40,9 +40,7 @@ class Register:
             return
 
         recv_frame = params[0]
-        authorization_config = lib.parse_header(
-            recv_frame['header']['WWW-Authenticate']
-        )
+        authorization_config = recv_frame['authenticate']
         authorization_config.update({
             'method': 'REGISTER',
             'username': '6002',
