@@ -26,25 +26,28 @@ def parse_message(message):
         k, v = [x.strip() for x in h.split(':', 1)]
         message_header[k] = v
 
-    result = {
+    frame = {
         'start-line': start_line_raw,
         'header': message_header,
         'body': message_body_raw,
     }
 
-    return result
+    kind = start_line_raw.split(' ')
+    frame['kind'] = ['request', 'response']['SIP/2.0' == kind[0]]
 
+    if 'response' == frame['kind']:
+        frame['response_code'] = int(kind[1])
 
-def parse_header(header):
-    result = {}
-    kind, params = header.split(' ', 1)
-    if not 'Digest' == kind:
-        return result
+    www_authenticate = frame['header'].get('WWW-Authenticate')
+    if www_authenticate:
+        authenticate = {}
+        _, params = www_authenticate.split(' ', 1)
+        for param in params.replace('"', '').split(','):
+            k, v = [x.strip() for x in param.split('=')]
+            authenticate[k] = v
+        frame['authenticate'] = authenticate
 
-    for param in params.replace('"', '').split(','):
-        k, v = [x.strip() for x in param.split('=')]
-        result[k] = v
-    return result
+    return frame
 
 
 def build_authorization(config):
