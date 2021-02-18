@@ -5,7 +5,7 @@ import lib
 
 request_message_template = '\r\n'.join([
     'REGISTER sip:asterisk@<server_address>:5060 SIP/2.0',
-    'Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bKPjEMKNT1arBd1xzjzfSCDYJAqS-1U1vqOl',
+    'Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bK<branch>',
     'Max-Forwards: 70',
     'From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu',
     'To: <sip:6002@<server_address>>',
@@ -13,7 +13,7 @@ request_message_template = '\r\n'.join([
     'CSeq: <cseq_number> REGISTER',
     'User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31',
     'Contact: <sip:6002@<server_address>:5061;ob>',
-    'Expires: 300',
+    'Expires: <expires>',
     'Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS',
     'Authorization: <authorization>',
     'Content-Length:  0',
