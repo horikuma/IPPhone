@@ -2,6 +2,7 @@
 
 import heapq
 import queue
+import threading
 
 event_queue = None
 event_hooks = None
@@ -18,15 +19,17 @@ def regist(event_id, hook, priority=MIDDLE):
     event_hooks[event_id].append((priority, hook))
 
 
-def put(event_id, params=None):
-    global event_queue
-    event_queue.put((event_id, params))
+def put(event_id, params=None, delay=None):
+    if not delay:
+        event_queue.put((event_id, params))
+    else:
+        threading.Timer(delay, put, (event_id, params)).start()
 
 
 def exec():
     event_id, params = event_queue.get()
     if not event_id in event_hooks:
-        print('404 not found')
+        print(f'404 event_hook not found :{event_id}')
         return
 
     event_hook = event_hooks[event_id] + event_hooks['*']
