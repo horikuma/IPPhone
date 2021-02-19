@@ -12,7 +12,7 @@ class Register:
         self.local_cseq_number = 0
         self.server_address = server_address
         self.remote_address = remote_address
-        self.expires = 60
+        self.expires = 30
 
         self.machine = lib.build_statemachine(self, states)
         event.regist('regist', self.exec)
@@ -46,6 +46,9 @@ class Register:
         response_code = recv_frame['response_code']
         if 200 == response_code:
             self.retry_count = 0
+            expires = recv_frame['header'].get('Expires')
+            if expires:
+                self.expires = int(expires)
             event.put('register_timer', delay=self.expires // 2)
             self.to_registered()
         if 401 == response_code:
