@@ -2,6 +2,7 @@
 
 import os
 import sys
+import syslog as log
 import threading
 
 import com
@@ -15,10 +16,14 @@ def cmd():
     if '+a' == c:
         event.put('regist')
     if 'q' == c:
-        exit()
+        return False
+    return True
 
 
 def main():
+    log.openlog('IPPhone', log.LOG_PERROR)
+    log.syslog('開始')
+
     server_address = os.environ['SERVER_ADDRESS']
     remote_address = (server_address, 5060)
 
@@ -30,8 +35,12 @@ def main():
 
     threading.Thread(target=drv.recv, daemon=True).start()
     threading.Thread(target=event.main, daemon=True).start()
-    while True:
-        cmd()
+
+    while cmd():
+        pass
+
+    log.syslog('終了')
+    log.closelog()
 
 
 if __name__ == '__main__':
