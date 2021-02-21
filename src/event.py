@@ -2,6 +2,7 @@
 
 import heapq
 import queue
+import syslog as log
 import threading
 
 event_queue = None
@@ -17,6 +18,7 @@ def regist(event_id, hook, priority=MIDDLE):
     if not event_id in event_hooks:
         event_hooks[event_id] = []
     event_hooks[event_id].append((priority, hook))
+    log.syslog(f'イベントハンドラ登録:{event_id}')
 
 
 def put(event_id, params=None, delay=None):
@@ -29,15 +31,16 @@ def put(event_id, params=None, delay=None):
 def exec():
     event_id, params = event_queue.get()
     if not event_id in event_hooks:
-        print(f'404 event_hook not found :{event_id}')
+        log.syslog(log.LOG_WARNING, f'イベントフック未登録:{event_id}')
         return
 
     event_hook = event_hooks[event_id] + event_hooks['*']
     heapq.heapify(event_hook)
     while event_hook:
         _, h = heapq.heappop(event_hook)
-        # print(event_id)
+        log.syslog(f'イベントフック開始:{event_id}')
         h(event_id, params)
+        log.syslog(f'イベントフック終了:{event_id}')
 
 
 def main():
