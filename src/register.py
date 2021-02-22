@@ -13,6 +13,7 @@ class Register:
         self.server_address = server_address
         self.remote_address = remote_address
         self.expires = 30
+        self.callid = f'{lib.key(36)}@{self.server_address}'
 
         self.machine = lib.build_statemachine(self, states)
         event.regist('regist', self.exec)
@@ -33,6 +34,7 @@ class Register:
             'cseq_number': self.local_cseq_number,
             'branch': lib.key(10),
             'expires': self.expires,
+            'callid': self.callid,
         }
         event.put('send_request', (
             send_frame,
@@ -76,7 +78,8 @@ class Register:
             'branch': lib.key(10),
             'expires': self.expires,
             'authorization': authorization,
-            'add_header': {'Authorization', 'Expires', 'Contact'}
+            'add_header': {'Authorization', 'Expires', 'Contact'},
+            'callid': self.callid,
         }
         event.put('send_request', (
             send_frame,

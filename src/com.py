@@ -9,7 +9,7 @@ request_message_template = '\r\n'.join([
     'Max-Forwards: 70',
     'From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu',
     'To: <sip:6002@<server_address>>',
-    'Call-ID: deUH4-p2IpimBfdJvwFAHH8EVJRay1BU',
+    'Call-ID: <callid>',
     'CSeq: <cseq_number> REGISTER',
     'User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31',
     'Contact: <sip:6002@<server_address>:5061;ob>',
