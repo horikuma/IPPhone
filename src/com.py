@@ -4,13 +4,13 @@ import event
 import lib
 
 request_message_template = '\r\n'.join([
-    'REGISTER sip:asterisk@<server_address>:5060 SIP/2.0',
+    '<method> sip:asterisk@<server_address>:5060 SIP/2.0',
     'Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bK<branch>',
     'Max-Forwards: 70',
     'From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu',
     'To: <sip:6002@<server_address>>',
     'Call-ID: <callid>',
-    'CSeq: <cseq_number> REGISTER',
+    'CSeq: <local_cseq_number> <method>',
     'User-Agent: PJSUA v2.10-dev Linux-5.4.72/x86_64/glibc-2.31',
     'Contact: <sip:6002@<server_address>:5061;ob>',
     'Expires: <expires>',
