@@ -7,7 +7,7 @@ request_message_template = '\r\n'.join([
     '<method> sip:asterisk@<server_address>:5060 SIP/2.0',
     'Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bK<branch>',
     'Max-Forwards: 70',
-    'From: <sip:6002@<server_address>>;tag=0E5AsBqTALBI8zv1roq682BWtJt6wJOu',
+    'From: <sip:<local_username>@<local_hostname>>;tag=<local_tag>',
     'To: <sip:6002@<server_address>>',
     'Call-ID: <callid>',
     'CSeq: <local_cseq_number> <method>',
