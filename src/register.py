@@ -13,7 +13,10 @@ class Register:
             'method': 'REGISTER',
             'local_cseq_number': 0,
             'local_username': '6002',
-            'local_hostname': server_address,
+            'local_domainname': server_address,
+            'remote_username': '6002',
+            'remote_domainname': server_address,
+            'remote_tag': '',
             'server_address': server_address,
             'remote_address': remote_address,
             'expires': 30,
@@ -37,7 +40,7 @@ class Register:
         send_frame = self.frame.copy()
         send_frame.update({
             'branch': lib.key(10),
-            'local_tag': lib.key(36),
+            'local_tag': f';tag={lib.key(36)}',
         })
         print(send_frame)
         event.put('send_request', (
@@ -80,7 +83,7 @@ class Register:
         send_frame = self.frame.copy()
         send_frame.update({
             'branch': lib.key(10),
-            'local_tag': lib.key(36),
+            'local_tag': f';tag={lib.key(36)}',
             'authorization': authorization,
             'add_header': {'Authorization', 'Expires', 'Contact'},
         })
