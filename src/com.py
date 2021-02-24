@@ -4,8 +4,8 @@ import event
 import lib
 
 request_message_template = '\r\n'.join([
-    '<method> sip:asterisk@<server_address>:5060 SIP/2.0',
-    'Via: SIP/2.0/UDP <server_address>:5061;rport;branch=z9hG4bK<branch>',
+    '<method> sip:<remote_domainname>:<remote_port> SIP/2.0',
+    'Via: SIP/2.0/UDP <server_address>:<local_port>;branch=z9hG4bK<branch>',
     'Max-Forwards: 70',
     'From: <sip:<local_username>@<local_domainname>><local_tag>',
     'To: <sip:<remote_username>@<remote_domainname>><remote_tag>',
