@@ -7,22 +7,21 @@ states = ['init', 'idle', 'trying', 'registered']
 
 
 class Register:
-    def __init__(self, server_address, remote_address):
+    def __init__(self, server_domainname, server_address):
         self.retry_count = 0
+        self.server_address = server_address
         self.frame = {
             'method': 'REGISTER',
             'local_cseq_number': 0,
             'local_username': '6002',
-            'local_domainname': server_address,
+            'local_domainname': server_domainname,
             'local_port': 5061,
             'remote_username': '6002',
-            'remote_domainname': server_address,
+            'remote_domainname': server_domainname,
             'remote_port': 5060,
             'remote_tag': '',
-            'server_address': server_address,
-            'remote_address': remote_address,
             'expires': 30,
-            'callid': f'{lib.key(36)}@{server_address}',
+            'callid': f'{lib.key(36)}@{server_domainname}',
         }
 
         self.machine = lib.build_statemachine(self, states)
@@ -41,13 +40,13 @@ class Register:
         self.frame['local_cseq_number'] += 1
         send_frame = self.frame.copy()
         send_frame.update({
-            'branch': lib.key(10),
+            'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
         })
         print(send_frame)
         event.put('send_request', (
             send_frame,
-            self.frame['remote_address'],
+            self.server_address,
         ))
         self.to_trying()
 
@@ -72,26 +71,26 @@ class Register:
         if not 1 == self.retry_count:
             return
 
-        server_address = self.frame['server_address']
+        rd, rp = self.frame['remote_domainname'], self.frame['remote_port']
         authorization_config = recv_frame['authenticate']
         authorization_config.update({
             'method': 'REGISTER',
             'username': self.frame['local_username'],
             'password': 'unsecurepassword',
-            'uri': f'sip:asterisk@{server_address}:5060',
+            'uri': f'sip:{rd}:{rp}',
         })
         authorization = lib.build_authorization(authorization_config)
         self.frame['local_cseq_number'] += 1
         send_frame = self.frame.copy()
         send_frame.update({
-            'branch': lib.key(10),
+            'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
             'authorization': authorization,
             'add_header': {'Authorization', 'Expires', 'Contact'},
         })
         event.put('send_request', (
             send_frame,
-            self.frame['remote_address'],
+            self.server_address,
         ))
 
     def registered__register_timer(self, params):
