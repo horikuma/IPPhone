@@ -20,7 +20,7 @@ class Register:
             'remote_domainname': server_domainname,
             'remote_port': 5060,
             'remote_tag': '',
-            'expires': 30,
+            'expires': 600,
             'callid': f'{lib.key(36)}@{server_domainname}',
         }
 

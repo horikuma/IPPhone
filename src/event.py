@@ -17,7 +17,8 @@ def regist(event_id, hook, priority=MIDDLE):
     global event_hooks
     if not event_id in event_hooks:
         event_hooks[event_id] = []
-    event_hooks[event_id].append((priority, hook))
+    event_hooks[event_id].append(
+        (priority, hook.__module__, hook.__name__, hook))
     log.syslog(f'イベントハンドラ登録:{event_id}')
 
 
@@ -37,10 +38,10 @@ def exec():
     event_hook = event_hooks[event_id] + event_hooks['*']
     heapq.heapify(event_hook)
     while event_hook:
-        _, h = heapq.heappop(event_hook)
-        log.syslog(f'イベントフック開始:{event_id}')
+        *_, h = heapq.heappop(event_hook)
+        log.syslog(f'イベントフック開始:{event_id}->{h.__module__}.{h.__name__}')
         h(event_id, params)
-        log.syslog(f'イベントフック終了:{event_id}')
+        # log.syslog(f'イベントフック終了:{event_id}')
 
 
 def main():
