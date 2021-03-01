@@ -38,6 +38,10 @@ def parse_message(message):
     if 'response' == frame['kind']:
         frame['response_code'] = int(kind[1])
 
+    remote_cseq_number, method = frame['header']['CSeq'].split()
+    frame['remote_cseq_number'] = int(remote_cseq_number)
+    frame['method'] = method
+
     www_authenticate = frame['header'].get('WWW-Authenticate')
     if www_authenticate:
         authenticate = {}

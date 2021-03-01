@@ -50,6 +50,9 @@ class Register:
     def trying__recv_response(self, params):
         recv_frame = params[0]
 
+        if not 'REGISTER' == recv_frame['method']:
+            return
+
         response_code = recv_frame['response_code']
         if 200 == response_code:
             self.retry_count = 0

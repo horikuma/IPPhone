@@ -47,7 +47,7 @@ default_headers = {
 def sip_recv(event_id, params):
     message, address = params
     frame = lib.parse_message(message)
-    event.put('recv_response', (frame, ))
+    event.put(f'recv_{frame["kind"]}', (frame, ))
 
 
 def sip_send(event_id, params):
