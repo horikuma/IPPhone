@@ -81,18 +81,19 @@ def replace_all(source, config):
     return result
 
 
-def build_statemachine(model, states):
+def build_statemachine(model):
     sm = Machine(
         model=model,
-        states=states,
-        initial=states[0],
+        initial='init',
         ignore_invalid_triggers=True,)
 
     for symbol in dir(model):
         match = re.match(r'(\w+)__(\w+)', symbol, flags=re.ASCII)
         if not match:
             continue
+        # state names in HSMs MUST NOT contain underscores. (TODO)
         state, event = match.groups()
+        sm.add_state(state)
         sm.add_transition(
             trigger=event,
             source=state,

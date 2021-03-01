@@ -3,12 +3,10 @@
 import event
 import lib
 
-states = ['init', 'idle']
-
 
 class Dialog:
     def __init__(self):
-        self.machine = lib.build_statemachine(self, states)
+        self.machine = lib.build_statemachine(self)
         event.regist('recv_response', self.exec)
         self.boot()
 

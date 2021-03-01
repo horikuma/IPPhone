@@ -3,8 +3,6 @@
 import event
 import lib
 
-states = ['init', 'idle', 'trying', 'registered']
-
 
 class Register:
     def __init__(self, server_domainname, server_address):
@@ -24,7 +22,7 @@ class Register:
             'callid': f'{lib.key(36)}@{server_domainname}',
         }
 
-        self.machine = lib.build_statemachine(self, states)
+        self.machine = lib.build_statemachine(self)
         event.regist('regist', self.exec)
         event.regist('recv_response', self.exec)
         event.regist('register_timer', self.exec)
@@ -43,7 +41,6 @@ class Register:
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
         })
-        print(send_frame)
         event.put('send_request', (
             send_frame,
             self.server_address,
