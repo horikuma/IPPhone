@@ -9,6 +9,7 @@ class Register:
         self.retry_count = 0
         self.server_address = server_address
         self.frame = {
+            'kind': 'request',
             'method': 'REGISTER',
             'local_cseq_number': 0,
             'local_username': '6002',

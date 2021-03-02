@@ -12,13 +12,11 @@ def recv():
         message, address = sock.recvfrom(1024)
         message = message.decode()
         event.put('recv_packet', (message, address))
-        # print(message)
 
 
 def send(event_id, params):
     message, address = params
     sock.sendto(message.encode(), address)
-    # print(message)
 
 
 def init(local_address):

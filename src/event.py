@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import heapq
+import inspect
 import queue
 import syslog as log
 import threading
@@ -22,15 +23,17 @@ def regist(event_id, hook, priority=MIDDLE):
     log.syslog(f'イベントハンドラ登録:{event_id}')
 
 
-def put(event_id, params=None, delay=None):
+def put(event_id, params=None, delay=None, put_from=None):
+    if not put_from:
+        put_from = inspect.getframeinfo(inspect.currentframe().f_back).function
     if not delay:
-        event_queue.put((event_id, params))
+        event_queue.put((event_id, params, put_from))
     else:
-        threading.Timer(delay, put, (event_id, params)).start()
+        threading.Timer(delay, put, (event_id, params, None, put_from)).start()
 
 
 def exec():
-    event_id, params = event_queue.get()
+    event_id, params, put_from = event_queue.get()
     if not event_id in event_hooks:
         log.syslog(log.LOG_WARNING, f'イベントフック未登録:{event_id}')
         return
@@ -39,9 +42,9 @@ def exec():
     heapq.heapify(event_hook)
     while event_hook:
         *_, h = heapq.heappop(event_hook)
-        log.syslog(f'イベントフック開始:{event_id}->{h.__module__}.{h.__name__}')
+        log.syslog(
+            f'event_id: {event_id} ({put_from} -> {h.__module__}.{h.__name__})')
         h(event_id, params)
-        # log.syslog(f'イベントフック終了:{event_id}')
 
 
 def main():
