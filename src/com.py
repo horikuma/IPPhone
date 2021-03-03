@@ -51,7 +51,7 @@ con = Console()
 
 def display(dir, frame):
     method = frame['method']
-    cseq_num = frame.get('remote_cseq_number')
+    cseq_num = frame.get('remote_cseq_number')  # TODO
     if not cseq_num:
         cseq_num = frame.get('local_cseq_number')
 
@@ -99,6 +99,15 @@ def sip_send(event_id, params):
     display('S', frame)
 
 
+def sip_send_response(event_id, params):
+    message, address = params
+
+    event.put('send_packet', (message, address))
+    # display('S', frame)
+    con.print(Panel(f'[S] INVITE-??? (200 OK)'))
+
+
 def init():
     event.regist('recv_packet', sip_recv)
     event.regist('send_request', sip_send)
+    event.regist('send_response', sip_send_response)

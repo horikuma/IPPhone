@@ -33,7 +33,7 @@ def main():
     com.init()
     drv.init((server_address, 5061))
     reg.init(server_address, remote_address)
-    dialog.init()
+    dialog.init(remote_address)
 
     threading.Thread(target=drv.recv, daemon=True).start()
     threading.Thread(target=event.main, daemon=True).start()
