@@ -42,6 +42,10 @@ def parse_message(message):
     frame['remote_cseq_number'] = int(remote_cseq_number)
     frame['method'] = method
 
+    frame['callid'] = frame['header']['Call-ID']
+    frame['via'] = frame['header']['Via']
+    frame['from'] = frame['header']['From']
+
     www_authenticate = frame['header'].get('WWW-Authenticate')
     if www_authenticate:
         authenticate = {}

@@ -6,23 +6,45 @@ from rich.panel import Panel
 import event
 import lib
 
-request_message_template = '\r\n'.join([
-    '<method> sip:<remote_domainname>:<remote_port> SIP/2.0',
-    'Via: SIP/2.0/UDP <local_domainname>:<local_port><branch>',
-    'Max-Forwards: 70',
-    'From: <sip:<local_username>@<local_domainname>><local_tag>',
-    'To: <sip:<remote_username>@<remote_domainname>><remote_tag>',
-    'Call-ID: <callid>',
-    'CSeq: <local_cseq_number> <method>',
-    'User-Agent: horikuma IPPhone',
-    'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
-    'Expires: <expires>',
-    'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
-    'Authorization: <authorization>',
-    'Content-Length:  0',
-    '',
-    '',
-])
+response_reason = {
+    200: 'OK',
+}
+
+message_template = {
+    'request': '\r\n'.join([
+        '<method> sip:<remote_domainname>:<remote_port> SIP/2.0',
+        'Via: SIP/2.0/UDP <local_domainname>:<local_port><branch>',
+        'Max-Forwards: 70',
+        'From: <sip:<local_username>@<local_domainname>><local_tag>',
+        'To: <sip:<remote_username>@<remote_domainname>><remote_tag>',
+        'Call-ID: <callid>',
+        'CSeq: <local_cseq_number> <method>',
+        'User-Agent: horikuma IPPhone',
+        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
+        'Expires: <expires>',
+        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
+        'Authorization: <authorization>',
+        'Content-Length: 0',
+        '',
+        '',
+    ]),
+    'response': '\r\n'.join([
+        'SIP/2.0 <response_code> <response_reason>',
+        'Via: <via>',
+        'Max-Forwards: 70',
+        'From: <from>',
+        'To: <sip:<local_username>@<local_domainname>><local_tag>',
+        'Call-ID: <callid>',
+        'CSeq: <remote_cseq_number> <method>',
+        'User-Agent: horikuma IPPhone',
+        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
+        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
+        'Content-Type: <content_type>',
+        'Content-Length: <content_length>',
+        '',
+        '<body>',
+    ])
+}
 
 
 headder_priority = [
@@ -72,7 +94,7 @@ def sip_recv(event_id, params):
 def sip_send(event_id, params):
     frame, address = params
 
-    template_message = lib.replace_all(request_message_template, frame)
+    template_message = lib.replace_all(message_template['request'], frame)
     template_frame = lib.parse_message(template_message)
     header = ''
     headers = default_headers.copy()
@@ -100,11 +122,15 @@ def sip_send(event_id, params):
 
 
 def sip_send_response(event_id, params):
-    message, address = params
+    frame, address = params
 
+    frame.update({
+        'response_reason': response_reason[frame['response_code']],
+    })
+
+    message = lib.replace_all(message_template['response'], frame)
     event.put('send_packet', (message, address))
-    # display('S', frame)
-    con.print(Panel(f'[S] INVITE-??? (200 OK)'))
+    display('S', frame)
 
 
 def init():
