@@ -3,14 +3,13 @@
 import event
 import lib
 
-states = ['init', 'idle', 'trying', 'registered']
-
 
 class Register:
     def __init__(self, server_domainname, server_address):
         self.retry_count = 0
         self.server_address = server_address
         self.frame = {
+            'kind': 'request',
             'method': 'REGISTER',
             'local_cseq_number': 0,
             'local_username': '6002',
@@ -20,11 +19,11 @@ class Register:
             'remote_domainname': server_domainname,
             'remote_port': 5060,
             'remote_tag': '',
-            'expires': 30,
+            'expires': 600,
             'callid': f'{lib.key(36)}@{server_domainname}',
         }
 
-        self.machine = lib.build_statemachine(self, states)
+        self.machine = lib.build_statemachine(self)
         event.regist('regist', self.exec)
         event.regist('recv_response', self.exec)
         event.regist('register_timer', self.exec)
@@ -43,7 +42,6 @@ class Register:
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
         })
-        print(send_frame)
         event.put('send_request', (
             send_frame,
             self.server_address,
@@ -52,6 +50,9 @@ class Register:
 
     def trying__recv_response(self, params):
         recv_frame = params[0]
+
+        if not 'REGISTER' == recv_frame['method']:
+            return
 
         response_code = recv_frame['response_code']
         if 200 == response_code:
