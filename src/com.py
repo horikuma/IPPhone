@@ -129,6 +129,7 @@ def sip_send_response(event_id, params):
     })
 
     message = lib.replace_all(message_template['response'], frame)
+    message = message.replace('Content-Type: <content_type>\r\n', '')
     event.put('send_packet', (message, address))
     display('S', frame)
 
