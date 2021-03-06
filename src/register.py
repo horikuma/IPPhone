@@ -5,22 +5,29 @@ import lib
 
 
 class Register:
-    def __init__(self, server_domainname, server_address):
+    def __init__(self, config):
         self.retry_count = 0
-        self.server_address = server_address
+        self.server_address = config['server_address']
+        address = [
+            config['remote_address'],
+            config['server_address'],
+            config['local_address'],
+        ]
+        username = config['local_username']
         self.frame = {
             'kind': 'request',
             'method': 'REGISTER',
             'local_cseq_number': 0,
-            'local_username': '6002',
-            'local_domainname': server_domainname,
-            'local_port': 5061,
-            'remote_username': '6002',
-            'remote_domainname': server_domainname,
-            'remote_port': 5060,
+            'local_username': username,
+            'local_domainname': address[2][0],
+            'local_port': address[2][1],
+            'remote_username': username,
+            'remote_domainname': address[0][0],
+            'remote_port': address[0][1],
             'remote_tag': '',
-            'expires': 600,
-            'callid': f'{lib.key(36)}@{server_domainname}',
+            'expires': config['expires'],
+            'callid': f'{lib.key(36)}@{address[1][0]}',
+            'password': config['password'],
         }
 
         self.machine = lib.build_statemachine(self)
@@ -77,7 +84,7 @@ class Register:
         authorization_config.update({
             'method': 'REGISTER',
             'username': self.frame['local_username'],
-            'password': 'unsecurepassword',
+            'password': self.frame['password'],
             'uri': f'sip:{rd}:{rp}',
         })
         authorization = lib.build_authorization(authorization_config)
@@ -99,5 +106,5 @@ class Register:
         self.to_idle()
 
 
-def init(server_address, remote_address):
-    Register(server_address, remote_address)
+def init(config):
+    Register(config)

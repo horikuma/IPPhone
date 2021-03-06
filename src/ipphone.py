@@ -26,14 +26,21 @@ def main():
     log.syslog('開始')
 
     server_address = os.environ['SERVER_ADDRESS']
-    remote_address = (server_address, 5060)
+    config = {
+        'remote_address': (server_address, 5060),
+        'server_address': (server_address, 5060),
+        'local_address': (server_address, 5061),
+        'local_username': '6002',
+        'password': 'unsecurepassword',
+        'expires': 3600,
+    }
 
     event.init()
 
     com.init()
-    drv.init((server_address, 5061))
-    reg.init(server_address, remote_address)
-    dialog.init(remote_address)
+    drv.init(config)
+    reg.init(config)
+    dialog.init(config)
 
     threading.Thread(target=drv.recv, daemon=True).start()
     threading.Thread(target=event.main, daemon=True).start()

@@ -5,8 +5,8 @@ import lib
 
 
 class Dialog:
-    def __init__(self, server_address):
-        self.server_address = server_address
+    def __init__(self, config):
+        self.server_address = config['server_address']
         self.machine = lib.build_statemachine(self)
         event.regist('recv_request', self.exec)
         self.boot()
@@ -93,5 +93,5 @@ class Dialog:
         ))
 
 
-def init(server_address):
-    Dialog(server_address)
+def init(config):
+    Dialog(config)
