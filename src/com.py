@@ -48,24 +48,25 @@ message_template = {
 
 
 headder_priority = [
-    'To',
-    'From',
-    'CSeq',
-    'Call-ID',
-    'Max-Forwards',
     'Via',
-    'Authorization',
-    'Expires',
+    'Call-ID',
+    'From',
+    'To',
+    'CSeq',
     'Contact',
+    'Max-Forwards',
+    'Expires',
+    'Authorization',
+    'Content-Length',
 ]
 
 default_headers = {
-    'To',
-    'From',
-    'CSeq',
-    'Call-ID',
-    'Max-Forwards',
     'Via',
+    'Call-ID',
+    'From',
+    'To',
+    'CSeq',
+    'Max-Forwards',
 }
 
 con = Console()
