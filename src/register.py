@@ -8,25 +8,20 @@ class Register:
     def __init__(self, config):
         self.retry_count = 0
         self.server_address = config['server_address']
-        address = [
-            config['remote_address'],
-            config['server_address'],
-            config['local_address'],
-        ]
         username = config['local_username']
         self.frame = {
             'kind': 'request',
             'method': 'REGISTER',
             'local_cseq_number': 0,
             'local_username': username,
-            'local_domainname': address[2][0],
-            'local_port': address[2][1],
+            'local_domainname': config['local_address'][0],
+            'local_port': config['local_address'][1],
             'remote_username': username,
-            'remote_domainname': address[0][0],
-            'remote_port': address[0][1],
+            'remote_domainname': config['server_address'][0],
+            'remote_port': config['server_address'][1],
             'remote_tag': '',
             'expires': config['expires'],
-            'callid': f'{lib.key(36)}@{address[1][0]}',
+            'callid': f'{lib.key(36)}@{config["local_address"][0]}',
             'password': config['password'],
         }
 
