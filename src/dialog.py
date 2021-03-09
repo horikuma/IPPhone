@@ -84,6 +84,7 @@ class Dialog:
             'local_port': 5061,
             'content_type': 'application/sdp',
             'content_length': len(body),
+            'add_header': {'Content-Type', 'Content-Length'},
             'body': body,
         })
 

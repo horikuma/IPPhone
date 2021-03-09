@@ -5,47 +5,7 @@ from rich.panel import Panel
 
 import event
 import lib
-import sipframe
-
-response_reason = {
-    200: 'OK',
-}
-
-message_template = {
-    'request': '\r\n'.join([
-        '<method> sip:<remote_domainname>:<remote_port> SIP/2.0',
-        'Via: SIP/2.0/UDP <local_domainname>:<local_port><branch>',
-        'Max-Forwards: 70',
-        'From: <sip:<local_username>@<local_domainname>><local_tag>',
-        'To: <sip:<remote_username>@<remote_domainname>><remote_tag>',
-        'Call-ID: <callid>',
-        'CSeq: <local_cseq_number> <method>',
-        'User-Agent: horikuma IPPhone',
-        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
-        'Expires: <expires>',
-        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
-        'Authorization: <authorization>',
-        'Content-Length: 0',
-        '',
-        '',
-    ]),
-    'response': '\r\n'.join([
-        'SIP/2.0 <response_code> <response_reason>',
-        'Via: <via>',
-        'Max-Forwards: 70',
-        'From: <from>',
-        'To: <sip:<local_username>@<local_domainname>><local_tag>',
-        'Call-ID: <callid>',
-        'CSeq: <remote_cseq_number> <method>',
-        'User-Agent: horikuma IPPhone',
-        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
-        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
-        'Content-Type: <content_type>',
-        'Content-Length: <content_length>',
-        '',
-        '<body>',
-    ])
-}
+from sipframe import SipFrame
 
 con = Console()
 
@@ -65,7 +25,7 @@ def display(dir, frame):
 
 def sip_recv(event_id, params):
     message, address = params
-    frame = sipframe.SipFrame(message).frame
+    frame = SipFrame('recv', message).frame
     event.put(f'recv_{frame["kind"]}', (frame, ))
     display('R', frame)
 
@@ -73,26 +33,12 @@ def sip_recv(event_id, params):
 def sip_send(event_id, params):
     frame, address = params
 
-    template_message = lib.replace_all(message_template['request'], frame)
-    template_frame = sipframe.SipFrame(template_message)
-    event.put('send_packet', (template_frame.to_message(frame), address))
-    display('S', template_frame.frame)
-
-
-def sip_send_response(event_id, params):
-    frame, address = params
-
-    frame.update({
-        'response_reason': response_reason[frame['response_code']],
-    })
-
-    message = lib.replace_all(message_template['response'], frame)
-    message = message.replace('Content-Type: <content_type>\r\n', '')
-    event.put('send_packet', (message, address))
-    display('S', frame)
+    frame = SipFrame('send', frame)
+    event.put('send_packet', (frame.to_message(frame), address))
+    display('S', frame.frame)
 
 
 def init():
     event.regist('recv_packet', sip_recv)
     event.regist('send_request', sip_send)
-    event.regist('send_response', sip_send_response)
+    event.regist('send_response', sip_send)

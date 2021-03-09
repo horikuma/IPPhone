@@ -2,6 +2,46 @@ import re
 
 import lib
 
+response_reason = {
+    200: 'OK',
+}
+
+message_template = {
+    'request': '\r\n'.join([
+        '<method> sip:<remote_domainname>:<remote_port> SIP/2.0',
+        'Via: SIP/2.0/UDP <local_domainname>:<local_port><branch>',
+        'Max-Forwards: 70',
+        'From: <sip:<local_username>@<local_domainname>><local_tag>',
+        'To: <sip:<remote_username>@<remote_domainname>><remote_tag>',
+        'Call-ID: <callid>',
+        'CSeq: <local_cseq_number> <method>',
+        'User-Agent: horikuma IPPhone',
+        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
+        'Expires: <expires>',
+        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
+        'Authorization: <authorization>',
+        'Content-Length: 0',
+        '',
+        '',
+    ]),
+    'response': '\r\n'.join([
+        'SIP/2.0 <response_code> <response_reason>',
+        'Via: <via>',
+        'Max-Forwards: 70',
+        'From: <from>',
+        'To: <sip:<local_username>@<local_domainname>><local_tag>',
+        'Call-ID: <callid>',
+        'CSeq: <remote_cseq_number> <method>',
+        'User-Agent: horikuma IPPhone',
+        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
+        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
+        'Content-Type: <content_type>',
+        'Content-Length: <content_length>',
+        '',
+        '<body>',
+    ])
+}
+
 headder_priority = [
     'Via',
     'Call-ID',
@@ -12,6 +52,7 @@ headder_priority = [
     'Max-Forwards',
     'Expires',
     'Authorization',
+    'Content-Type',
     'Content-Length',
 ]
 
@@ -26,8 +67,12 @@ default_headers = {
 
 
 class SipFrame():
-    def __init__(self, message):
-        self.frame = self.parse_message(message)
+    def __init__(self, direction, source):
+        self.direction = direction
+        if str == type(source):
+            self.frame = self.parse_message(source)
+        if dict == type(source):
+            self.frame = source
 
     def parse_message(self, message):
         message_header_raw, message_body_raw = message.split('\r\n\r\n')
@@ -70,7 +115,18 @@ class SipFrame():
         return frame
 
     def to_message(self, frame):
-        template_frame = self.frame
+        if not 'send' == self.direction:
+            return ''
+
+        frame = self.frame
+        if 'response_code' in frame:
+            frame.update({
+                'response_reason': response_reason[frame['response_code']],
+            })
+
+        template_message = lib.replace_all(
+            message_template[self.frame['kind']], frame)
+        template_frame = self.parse_message(template_message)
 
         header = ''
         headers = default_headers.copy()
@@ -92,4 +148,5 @@ class SipFrame():
             header,
             template_frame['body'],
         ])
+        message = message.replace('Content-Type: <content_type>\r\n', '')
         return message
