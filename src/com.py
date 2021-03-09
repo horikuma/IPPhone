@@ -5,6 +5,7 @@ from rich.panel import Panel
 
 import event
 import lib
+import sipframe
 
 response_reason = {
     200: 'OK',
@@ -87,7 +88,7 @@ def display(dir, frame):
 
 def sip_recv(event_id, params):
     message, address = params
-    frame = lib.parse_message(message)
+    frame = sipframe.SipFrame(message).frame
     event.put(f'recv_{frame["kind"]}', (frame, ))
     display('R', frame)
 
@@ -96,7 +97,7 @@ def sip_send(event_id, params):
     frame, address = params
 
     template_message = lib.replace_all(message_template['request'], frame)
-    template_frame = lib.parse_message(template_message)
+    template_frame = sipframe.SipFrame(template_message).frame
     header = ''
     headers = default_headers.copy()
     if 'add_header' in frame:
