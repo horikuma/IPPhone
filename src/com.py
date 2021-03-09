@@ -47,29 +47,6 @@ message_template = {
     ])
 }
 
-
-headder_priority = [
-    'Via',
-    'Call-ID',
-    'From',
-    'To',
-    'CSeq',
-    'Contact',
-    'Max-Forwards',
-    'Expires',
-    'Authorization',
-    'Content-Length',
-]
-
-default_headers = {
-    'Via',
-    'Call-ID',
-    'From',
-    'To',
-    'CSeq',
-    'Max-Forwards',
-}
-
 con = Console()
 
 
@@ -97,30 +74,9 @@ def sip_send(event_id, params):
     frame, address = params
 
     template_message = lib.replace_all(message_template['request'], frame)
-    template_frame = sipframe.SipFrame(template_message).frame
-    header = ''
-    headers = default_headers.copy()
-    if 'add_header' in frame:
-        headers |= frame['add_header']
-    if 'remove_header' in frame:
-        headers -= frame['remove_header']
-    for h in headder_priority:
-        if not h in headers:
-            continue
-        if not h in template_frame['header']:
-            continue
-        if not template_frame['header'][h]:
-            continue
-        header += f'{h}: {template_frame["header"][h]}\r\n'
-
-    message = '\r\n'.join([
-        template_frame['start-line'],
-        header,
-        template_frame['body'],
-    ])
-
-    event.put('send_packet', (message, address))
-    display('S', frame)
+    template_frame = sipframe.SipFrame(template_message)
+    event.put('send_packet', (template_frame.to_message(frame), address))
+    display('S', template_frame.frame)
 
 
 def sip_send_response(event_id, params):
