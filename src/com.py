@@ -11,30 +11,30 @@ con = Console()
 
 
 def display(dir, frame):
-    method = frame['method']
+    method = frame.get('method')
     cseq_num = frame.get('remote_cseq_number')  # TODO
     if not cseq_num:
         cseq_num = frame.get('local_cseq_number')
 
-    if 'request' == frame['kind']:
+    if 'request' == frame.get('kind'):
         con.print(Panel(f'[{dir}] {method}-{cseq_num}'))
     else:
-        rcode = frame['response_code']
+        rcode = frame.get('response_code')
         con.print(Panel(f'[{dir}] {method}-{cseq_num} ({rcode})'))
 
 
 def sip_recv(event_id, params):
     message, address = params
-    frame = SipFrame('recv', message).frame
-    event.put(f'recv_{frame["kind"]}', (frame, ))
+
+    frame = SipFrame(message)
+    event.put(f'recv_{frame.get("kind")}', (frame, ))
     display('R', frame)
 
 
 def sip_send(event_id, params):
     frame, address = params
 
-    frame = SipFrame('send', frame)
-    event.put('send_packet', (frame.to_message(frame), address))
+    event.put('send_packet', (frame.to_message(), address))
     display('S', frame.frame)
 
 

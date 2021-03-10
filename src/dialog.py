@@ -2,6 +2,7 @@
 
 import event
 import lib
+from sipframe import SipFrame
 
 
 class Dialog:
@@ -15,14 +16,14 @@ class Dialog:
         self.trigger(event_id, params)
 
     def init__boot(self):
-        self.frame = {}
+        self.frame = SipFrame()
         self.to_idle()
 
     def idle__recv_request(self, params):
         recv_frame = params[0]
 
-        if 'INVITE' == recv_frame['method']:
-            self.frame['local_tag'] = f';tag={lib.key(36)}'
+        if 'INVITE' == recv_frame.get('method'):
+            self.frame.frame['local_tag'] = f';tag={lib.key(36)}'
             self.send_invite_200(recv_frame)
             self.to_comm()
             return
@@ -30,20 +31,20 @@ class Dialog:
     def comm__recv_request(self, params):
         recv_frame = params[0]
 
-        if 'INVITE' == recv_frame['method']:
+        if 'INVITE' == recv_frame.get('method'):
             self.send_invite_200(recv_frame)
             return
 
-        if not 'BYE' == recv_frame['method']:
+        if not 'BYE' == recv_frame.get('method'):
             return
 
         local_domainname = self.server_address[0]
 
         send_frame = recv_frame.copy()
-        send_frame.update({
+        send_frame.frame.update({
             'kind': 'response',
             'response_code': 200,
-            'local_tag': self.frame['local_tag'],
+            'local_tag': self.frame.get('local_tag'),
             'local_username': '6002',
             'local_domainname': local_domainname,
             'local_port': 5061,
@@ -75,10 +76,10 @@ class Dialog:
         ])
 
         send_frame = recv_frame.copy()
-        send_frame.update({
+        send_frame.frame.update({
             'kind': 'response',
             'response_code': 200,
-            'local_tag': self.frame['local_tag'],
+            'local_tag': self.frame.get('local_tag'),
             'local_username': '6002',
             'local_domainname': local_domainname,
             'local_port': 5061,

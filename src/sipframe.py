@@ -1,3 +1,4 @@
+import copy
 import re
 
 import lib
@@ -67,14 +68,21 @@ default_headers = {
 
 
 class SipFrame():
-    def __init__(self, direction, source):
-        self.direction = direction
-        if str == type(source):
-            self.frame = self.parse_message(source)
-        if dict == type(source):
+    def __init__(self, source=None):
+        if None == source:
+            self.frame = {}
+        elif str == type(source):
+            self.frame = self.to_frame(source)
+        elif dict == type(source):
             self.frame = source
 
-    def parse_message(self, message):
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def get(self, label):
+        return self.frame.get(label)
+
+    def to_frame(self, message):
         message_header_raw, message_body_raw = message.split('\r\n\r\n')
         start_line_raw, *message_header_raw = message_header_raw.split('\r\n')
 
@@ -114,10 +122,7 @@ class SipFrame():
 
         return frame
 
-    def to_message(self, frame):
-        if not 'send' == self.direction:
-            return ''
-
+    def to_message(self):
         frame = self.frame
         if 'response_code' in frame:
             frame.update({
@@ -126,7 +131,7 @@ class SipFrame():
 
         template_message = lib.replace_all(
             message_template[self.frame['kind']], frame)
-        template_frame = self.parse_message(template_message)
+        template_frame = self.to_frame(template_message)
 
         header = ''
         headers = default_headers.copy()
@@ -148,5 +153,4 @@ class SipFrame():
             header,
             template_frame['body'],
         ])
-        message = message.replace('Content-Type: <content_type>\r\n', '')
         return message

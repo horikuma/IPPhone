@@ -2,6 +2,7 @@
 
 import event
 import lib
+from sipframe import SipFrame
 
 
 class Register:
@@ -9,7 +10,7 @@ class Register:
         self.retry_count = 0
         self.server_address = config['server_address']
         username = config['local_username']
-        self.frame = {
+        self.frame = SipFrame({
             'kind': 'request',
             'method': 'REGISTER',
             'local_cseq_number': 0,
@@ -23,7 +24,7 @@ class Register:
             'expires': config['expires'],
             'callid': f'{lib.key(36)}@{config["local_address"][0]}',
             'password': config['password'],
-        }
+        })
 
         self.machine = lib.build_statemachine(self)
         event.regist('regist', self.exec)
@@ -38,9 +39,9 @@ class Register:
         self.to_idle()
 
     def idle__regist(self, params):
-        self.frame['local_cseq_number'] += 1
+        self.frame.frame['local_cseq_number'] += 1
         send_frame = self.frame.copy()
-        send_frame.update({
+        send_frame.frame.update({
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
         })
@@ -53,15 +54,15 @@ class Register:
     def trying__recv_response(self, params):
         recv_frame = params[0]
 
-        if not 'REGISTER' == recv_frame['method']:
+        if not 'REGISTER' == recv_frame.get('method'):
             return
 
-        response_code = recv_frame['response_code']
+        response_code = recv_frame.get('response_code')
         if 200 == response_code:
             self.retry_count = 0
-            expires = recv_frame['header'].get('Expires')
+            expires = recv_frame.frame['header'].get('Expires')
             if expires:
-                self.frame['expires'] = int(expires)
+                self.frame.frame['expires'] = int(expires)
             event.put('register_timer', delay=int(expires) // 2)
             self.to_registered()
         if 401 == response_code:
@@ -74,18 +75,19 @@ class Register:
         if not 1 == self.retry_count:
             return
 
-        rd, rp = self.frame['remote_domainname'], self.frame['remote_port']
-        authorization_config = recv_frame['authenticate']
+        rd = self.frame.get('remote_domainname')
+        rp = self.frame.get('remote_port')
+        authorization_config = recv_frame.get('authenticate')
         authorization_config.update({
             'method': 'REGISTER',
-            'username': self.frame['local_username'],
-            'password': self.frame['password'],
+            'username': self.frame.get('local_username'),
+            'password': self.frame.get('password'),
             'uri': f'sip:{rd}:{rp}',
         })
         authorization = lib.build_authorization(authorization_config)
-        self.frame['local_cseq_number'] += 1
+        self.frame.frame['local_cseq_number'] += 1
         send_frame = self.frame.copy()
-        send_frame.update({
+        send_frame.frame.update({
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
             'authorization': authorization,
