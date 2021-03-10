@@ -39,9 +39,10 @@ class Register:
         self.to_idle()
 
     def idle__regist(self, params):
-        self.frame.frame['local_cseq_number'] += 1
+        local_cseq_number = self.frame.get('local_cseq_number')
+        self.frame.set('local_cseq_number', local_cseq_number + 1)
         send_frame = self.frame.copy()
-        send_frame.frame.update({
+        send_frame.update({
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
         })
@@ -60,9 +61,9 @@ class Register:
         response_code = recv_frame.get('response_code')
         if 200 == response_code:
             self.retry_count = 0
-            expires = recv_frame.frame['header'].get('Expires')
+            expires = recv_frame.get('Expires')
             if expires:
-                self.frame.frame['expires'] = int(expires)
+                self.frame.set('expires') = int(expires)
             event.put('register_timer', delay=int(expires) // 2)
             self.to_registered()
         if 401 == response_code:
@@ -85,9 +86,10 @@ class Register:
             'uri': f'sip:{rd}:{rp}',
         })
         authorization = lib.build_authorization(authorization_config)
-        self.frame.frame['local_cseq_number'] += 1
+        local_cseq_number = self.frame.get('local_cseq_number')
+        self.frame.set('local_cseq_number', local_cseq_number + 1)
         send_frame = self.frame.copy()
-        send_frame.frame.update({
+        send_frame.update({
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
             'authorization': authorization,

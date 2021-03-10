@@ -80,7 +80,17 @@ class SipFrame():
         return copy.deepcopy(self)
 
     def get(self, label):
-        return self.frame.get(label)
+        if label in self.frame:
+            return self.frame.get(label)
+        if not 'header' in self.frame:
+            return None
+        return self.frame['header'].get(label)
+
+    def set(self, label, value):
+        self.frame[label] = value
+
+    def update(self, value):
+        self.frame.update(value)
 
     def to_frame(self, message):
         message_header_raw, message_body_raw = message.split('\r\n\r\n')

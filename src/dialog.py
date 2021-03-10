@@ -23,7 +23,7 @@ class Dialog:
         recv_frame = params[0]
 
         if 'INVITE' == recv_frame.get('method'):
-            self.frame.frame['local_tag'] = f';tag={lib.key(36)}'
+            self.frame.set('local_tag', f';tag={lib.key(36)}')
             self.send_invite_200(recv_frame)
             self.to_comm()
             return
@@ -41,7 +41,7 @@ class Dialog:
         local_domainname = self.server_address[0]
 
         send_frame = recv_frame.copy()
-        send_frame.frame.update({
+        send_frame.update({
             'kind': 'response',
             'response_code': 200,
             'local_tag': self.frame.get('local_tag'),
@@ -76,7 +76,7 @@ class Dialog:
         ])
 
         send_frame = recv_frame.copy()
-        send_frame.frame.update({
+        send_frame.update({
             'kind': 'response',
             'response_code': 200,
             'local_tag': self.frame.get('local_tag'),
