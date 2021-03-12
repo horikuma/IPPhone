@@ -63,7 +63,7 @@ class Register:
             self.retry_count = 0
             expires = recv_frame.get('Expires')
             if expires:
-                self.frame.set('expires') = int(expires)
+                self.frame.set('expires', int(expires))
             event.put('register_timer', delay=int(expires) // 2)
             self.to_registered()
         if 401 == response_code:
