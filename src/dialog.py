@@ -9,6 +9,18 @@ from sipframe import SipFrame
 class Dialog:
     def __init__(self, config):
         self.server_address = config['server_address']
+
+        user, domain, port = config['local_uri']
+        self.frame = SipFrame({
+            'kind': 'request',
+            'method': 'INVITE',
+            'local_cseq_number': 0,
+            'local_username': user,
+            'local_domainname': domain,
+            'local_port': port,
+            'remote_tag': '',
+        })
+
         self.machine = lib.build_statemachine(self)
         event.regist('recv_request', self.exec)
         self.boot()
@@ -46,9 +58,9 @@ class Dialog:
             'kind': 'response',
             'response_code': 200,
             'local_tag': self.frame.get('local_tag'),
-            'local_username': '6002',
-            'local_domainname': local_domainname,
-            'local_port': 5061,
+            'local_username': self.frame.get('local_username'),
+            'local_domainname': self.frame.get('local_domainname'),
+            'local_port': self.frame.get('local_port'),
             'content_length': 0,
             'body': '',
         })
@@ -68,9 +80,9 @@ class Dialog:
             'kind': 'response',
             'response_code': 200,
             'local_tag': self.frame.get('local_tag'),
-            'local_username': '6002',
-            'local_domainname': local_domainname,
-            'local_port': 5061,
+            'local_username': self.frame.get('local_username'),
+            'local_domainname': self.frame.get('local_domainname'),
+            'local_port': self.frame.get('local_port'),
             'content_type': 'application/sdp',
             'content_length': len(body),
             'add_header': {'Content-Type', 'Content-Length'},

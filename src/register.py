@@ -9,20 +9,21 @@ class Register:
     def __init__(self, config):
         self.retry_count = 0
         self.server_address = config['server_address']
-        username = config['local_username']
+
+        user, domain, port = config['local_uri']
         self.frame = SipFrame({
             'kind': 'request',
             'method': 'REGISTER',
             'local_cseq_number': 0,
-            'local_username': username,
-            'local_domainname': config['local_address'][0],
-            'local_port': config['local_address'][1],
-            'remote_username': username,
-            'remote_domainname': config['server_address'][0],
-            'remote_port': config['server_address'][1],
+            'local_username': user,
+            'local_domainname': domain,
+            'local_port': port,
+            'remote_username': user,
+            'remote_domainname': domain,
+            'remote_port': port,
             'remote_tag': '',
             'expires': config['expires'],
-            'callid': f'{lib.key(36)}@{config["local_address"][0]}',
+            'callid': f'{lib.key(36)}@{domain}',
             'password': config['password'],
         })
 

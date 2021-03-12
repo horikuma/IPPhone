@@ -27,10 +27,8 @@ def main():
 
     server_address = os.environ['SERVER_ADDRESS']
     config = {
-        'remote_address': (server_address, 5060),
         'server_address': (server_address, 5060),
-        'local_address': (server_address, 5061),
-        'local_username': '6002',
+        'local_uri': ('6002', server_address, 5061),
         'password': 'unsecurepassword',
         'expires': 3600,
     }
