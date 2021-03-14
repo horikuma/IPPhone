@@ -72,7 +72,7 @@ class SipFrame():
         if None == source:
             self.frame = {}
         elif str == type(source):
-            self.frame = self.to_frame(source)
+            self.frame = self.parse_message(source)
         elif dict == type(source):
             self.frame = source
 
@@ -92,7 +92,7 @@ class SipFrame():
     def update(self, value):
         self.frame.update(value)
 
-    def to_frame(self, message):
+    def parse_message(self, message):
         message_header_raw, message_body_raw = message.split('\r\n\r\n')
         start_line_raw, *message_header_raw = message_header_raw.split('\r\n')
 
@@ -141,7 +141,7 @@ class SipFrame():
 
         template_message = lib.replace_all(
             message_template[self.frame['kind']], frame)
-        template_frame = self.to_frame(template_message)
+        template_frame = self.parse_message(template_message)
 
         header = ''
         headers = default_headers.copy()

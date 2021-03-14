@@ -12,7 +12,7 @@ con = Console()
 
 def display(dir, frame):
     method = frame.get('method')
-    cseq_num = frame.get('remote_cseq_number')  # TODO
+    cseq_num = frame.get('remote_cseq_number')
     if not cseq_num:
         cseq_num = frame.get('local_cseq_number')
 
