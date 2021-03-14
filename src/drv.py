@@ -19,9 +19,9 @@ def send(event_id, params):
     sock.sendto(message.encode(), address)
 
 
-def init(local_address):
+def init(config):
     global sock
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(local_address)
+    sock.bind(config['local_uri'][1:])
 
     event.regist('send_packet', send)

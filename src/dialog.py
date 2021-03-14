@@ -2,11 +2,25 @@
 
 import event
 import lib
+import rtp
+from sipframe import SipFrame
 
 
 class Dialog:
-    def __init__(self, server_address):
-        self.server_address = server_address
+    def __init__(self, config):
+        self.server_address = config['server_address']
+
+        user, domain, port = config['local_uri']
+        self.frame = SipFrame({
+            'kind': 'request',
+            'method': 'INVITE',
+            'local_cseq_number': 0,
+            'local_username': user,
+            'local_domainname': domain,
+            'local_port': port,
+            'remote_tag': '',
+        })
+
         self.machine = lib.build_statemachine(self)
         event.regist('recv_request', self.exec)
         self.boot()
@@ -15,14 +29,14 @@ class Dialog:
         self.trigger(event_id, params)
 
     def init__boot(self):
-        self.frame = {}
+        self.frame = SipFrame()
         self.to_idle()
 
     def idle__recv_request(self, params):
         recv_frame = params[0]
 
-        if 'INVITE' == recv_frame['method']:
-            self.frame['local_tag'] = f';tag={lib.key(36)}'
+        if 'INVITE' == recv_frame.get('method'):
+            self.frame.set('local_tag', f';tag={lib.key(36)}')
             self.send_invite_200(recv_frame)
             self.to_comm()
             return
@@ -30,11 +44,11 @@ class Dialog:
     def comm__recv_request(self, params):
         recv_frame = params[0]
 
-        if 'INVITE' == recv_frame['method']:
+        if 'INVITE' == recv_frame.get('method'):
             self.send_invite_200(recv_frame)
             return
 
-        if not 'BYE' == recv_frame['method']:
+        if not 'BYE' == recv_frame.get('method'):
             return
 
         local_domainname = self.server_address[0]
@@ -43,10 +57,10 @@ class Dialog:
         send_frame.update({
             'kind': 'response',
             'response_code': 200,
-            'local_tag': self.frame['local_tag'],
-            'local_username': '6002',
-            'local_domainname': local_domainname,
-            'local_port': 5061,
+            'local_tag': self.frame.get('local_tag'),
+            'local_username': self.frame.get('local_username'),
+            'local_domainname': self.frame.get('local_domainname'),
+            'local_port': self.frame.get('local_port'),
             'content_length': 0,
             'body': '',
         })
@@ -59,31 +73,19 @@ class Dialog:
 
     def send_invite_200(self, recv_frame):
         local_domainname = self.server_address[0]
-        body = '\r\n'.join([
-            'v=0',
-            f'o=- 1207507748 1207507748 IN IP4 {local_domainname}',
-            's=Asterisk',
-            f'c=IN IP4 {local_domainname}',
-            't=0 0',
-            'm=audio 17104 RTP/AVP 0 101',
-            'a=rtpmap:0 PCMU/8000',
-            'a=rtpmap:101 telephone-event/8000',
-            'a=fmtp:101 0-16',
-            'a=ptime:20',
-            'a=maxptime:150',
-            'a=sendrecv',
-        ])
+        body = rtp.get_sdp(local_domainname)
 
         send_frame = recv_frame.copy()
         send_frame.update({
             'kind': 'response',
             'response_code': 200,
-            'local_tag': self.frame['local_tag'],
-            'local_username': '6002',
-            'local_domainname': local_domainname,
-            'local_port': 5061,
+            'local_tag': self.frame.get('local_tag'),
+            'local_username': self.frame.get('local_username'),
+            'local_domainname': self.frame.get('local_domainname'),
+            'local_port': self.frame.get('local_port'),
             'content_type': 'application/sdp',
             'content_length': len(body),
+            'add_header': {'Content-Type', 'Content-Length'},
             'body': body,
         })
 
@@ -93,5 +95,5 @@ class Dialog:
         ))
 
 
-def init(server_address):
-    Dialog(server_address)
+def init(config):
+    Dialog(config)
