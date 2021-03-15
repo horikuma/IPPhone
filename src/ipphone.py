@@ -14,9 +14,11 @@ import register as reg
 
 def cmd():
     c = input()
-    if '+a' == c:
+    if 'a' == c:
+        event.put('answer')
+    elif '+a' == c:
         event.put('regist')
-    if 'q' == c:
+    elif 'q' == c:
         return False
     return True
 

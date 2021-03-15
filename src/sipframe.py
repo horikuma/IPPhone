@@ -4,6 +4,7 @@ import re
 import lib
 
 response_reason = {
+    180: 'Ringing',
     200: 'OK',
 }
 
