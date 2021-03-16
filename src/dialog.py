@@ -40,44 +40,29 @@ class Dialog:
         self.recv_frame_invite = recv_frame
 
         self.frame.set('local_tag', f';tag={lib.key(36)}')
-        self.send_invite_response(self.recv_frame_invite, 180)
+        self.send_response(self.recv_frame_invite, 180)
         self.to_ring()
 
     def ring__answer(self, params):
         local_domainname = self.frame.get('local_domainname')
         sdp = rtp.get_sdp(local_domainname)
-        self.send_invite_response(self.recv_frame_invite, 200, sdp)
+        self.send_response(self.recv_frame_invite, 200, sdp)
         self.to_comm()
 
     def comm__recv_request(self, params):
         recv_frame = params[0]
 
         if 'INVITE' == recv_frame.get('method'):
-            self.send_invite_response(recv_frame, 200)
+            self.send_response(recv_frame, 200)
             return
 
         if not 'BYE' == recv_frame.get('method'):
             return
 
-        send_frame = recv_frame.copy()
-        send_frame.update({
-            'kind': 'response',
-            'response_code': 200,
-            'local_tag': self.frame.get('local_tag'),
-            'local_username': self.frame.get('local_username'),
-            'local_domainname': self.frame.get('local_domainname'),
-            'local_port': self.frame.get('local_port'),
-            'content_length': 0,
-            'body': '',
-        })
-
-        event.put('send_response', (
-            send_frame,
-            self.server_address,
-        ))
+        self.send_response(recv_frame, 200)
         self.to_idle()
 
-    def send_invite_response(self, recv_frame, response_code, sdp=None):
+    def send_response(self, recv_frame, response_code, sdp=None):
         send_frame = recv_frame.copy()
         send_frame.update({
             'kind': 'response',
