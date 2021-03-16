@@ -49,6 +49,15 @@ class Dialog:
         self.send_response(self.recv_frame_invite, 200, sdp)
         self.to_comm()
 
+    def ring__recv_request(self, params):
+        recv_frame = params[0]
+
+        if not 'CANCEL' == recv_frame.get('method'):
+            return
+        self.send_response(recv_frame, 200)
+        self.send_response(self.recv_frame_invite, 487)
+        self.to_idle()
+
     def comm__recv_request(self, params):
         recv_frame = params[0]
 
