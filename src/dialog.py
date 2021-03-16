@@ -30,7 +30,6 @@ class Dialog:
         self.trigger(event_id, params)
 
     def init__boot(self):
-        self.frame = SipFrame()
         self.to_idle()
 
     def idle__recv_request(self, params):
@@ -54,13 +53,11 @@ class Dialog:
         recv_frame = params[0]
 
         if 'INVITE' == recv_frame.get('method'):
-            self.send_invite_200(recv_frame)
+            self.send_invite_response(recv_frame, 200)
             return
 
         if not 'BYE' == recv_frame.get('method'):
             return
-
-        local_domainname = self.server_address[0]
 
         send_frame = recv_frame.copy()
         send_frame.update({
