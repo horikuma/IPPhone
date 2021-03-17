@@ -16,6 +16,8 @@ def cmd():
     c = input()
     if 'a' == c:
         event.put('answer')
+    elif 'h' == c:
+        event.put('hangup')
     elif '+a' == c:
         event.put('regist')
     elif 'q' == c:

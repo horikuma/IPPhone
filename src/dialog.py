@@ -12,18 +12,16 @@ class Dialog:
 
         user, domain, port = config['local_uri']
         self.frame = SipFrame({
-            'kind': 'request',
-            'method': 'INVITE',
             'local_cseq_number': 0,
             'local_username': user,
             'local_domainname': domain,
             'local_port': port,
-            'remote_tag': '',
         })
 
         self.machine = lib.build_statemachine(self)
         event.regist('recv_request', self.exec)
         event.regist('answer', self.exec)
+        event.regist('hangup', self.exec)
         self.boot()
 
     def exec(self, event_id, params):
@@ -37,9 +35,15 @@ class Dialog:
 
         if not 'INVITE' == recv_frame.get('method'):
             return
-        self.recv_frame_invite = recv_frame
 
+        self.recv_frame_invite = recv_frame.copy()
+
+        self.frame.set('callid', recv_frame.get('callid'))
         self.frame.set('local_tag', f';tag={lib.key(36)}')
+        self.frame.set('remote_username', recv_frame.get('remote_username'))
+        self.frame.set('remote_domainname',
+                       recv_frame.get('remote_domainname'))
+        self.frame.set('remote_tag', recv_frame.get('remote_tag'))
         self.send_response(self.recv_frame_invite, 180)
         self.to_ring()
 
@@ -54,15 +58,22 @@ class Dialog:
 
         if not 'CANCEL' == recv_frame.get('method'):
             return
+
         self.send_response(recv_frame, 200)
         self.send_response(self.recv_frame_invite, 487)
+        self.to_idle()
+
+    def comm__hangup(self, params):
+        self.send_request('BYE')
         self.to_idle()
 
     def comm__recv_request(self, params):
         recv_frame = params[0]
 
         if 'INVITE' == recv_frame.get('method'):
-            self.send_response(recv_frame, 200)
+            local_domainname = self.frame.get('local_domainname')
+            sdp = rtp.get_sdp(local_domainname)
+            self.send_response(recv_frame, 200, sdp)
             return
 
         if not 'BYE' == recv_frame.get('method'):
@@ -70,6 +81,20 @@ class Dialog:
 
         self.send_response(recv_frame, 200)
         self.to_idle()
+
+    def send_request(self, method):
+        key = 'local_cseq_number'
+        self.frame.set(key, self.frame.get(key) + 1)
+        self.frame.set('branch', f';branch=z9hG4bK{lib.key(10)}'),
+        send_frame = self.frame.copy()
+        send_frame.update({
+            'kind': 'request',
+            'method': method,
+        })
+        event.put('send_request', (
+            send_frame,
+            self.server_address,
+        ))
 
     def send_response(self, recv_frame, response_code, sdp=None):
         send_frame = recv_frame.copy()

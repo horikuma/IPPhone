@@ -11,7 +11,7 @@ response_reason = {
 
 message_template = {
     'request': '\r\n'.join([
-        '<method> sip:<remote_domainname>:<remote_port> SIP/2.0',
+        '<method> sip:<remote_username>@<remote_domainname> SIP/2.0',
         'Via: SIP/2.0/UDP <local_domainname>:<local_port><branch>',
         'Max-Forwards: 70',
         'From: <sip:<local_username>@<local_domainname>><local_tag>',
@@ -116,12 +116,22 @@ class SipFrame():
             frame['response_code'] = int(kind[1])
 
         remote_cseq_number, method = frame['header']['CSeq'].split()
-        frame['remote_cseq_number'] = int(remote_cseq_number)
+        if 'request' == frame['kind']:
+            frame['remote_cseq_number'] = int(remote_cseq_number)
+        else:
+            frame['local_cseq_number'] = int(remote_cseq_number)
         frame['method'] = method
 
         frame['callid'] = frame['header']['Call-ID']
         frame['via'] = frame['header']['Via']
         frame['from'] = frame['header']['From']
+        if 'request' == frame['kind']:
+            user, domain = re.search(
+                r'<sip:(\d+)@([\d\.]+)>', frame['from']).groups()
+            frame['remote_username'] = user
+            frame['remote_domainname'] = domain
+            frame['remote_tag'] = re.search(
+                r'(;tag=.+)', frame['from']).groups()[0]
 
         www_authenticate = frame['header'].get('WWW-Authenticate')
         if www_authenticate:
