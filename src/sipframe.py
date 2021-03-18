@@ -6,6 +6,7 @@ import lib
 response_reason = {
     180: 'Ringing',
     200: 'OK',
+    486: 'Busy Here',
     487: 'Request Terminated',
 }
 
@@ -23,9 +24,10 @@ message_template = {
         'Expires: <expires>',
         'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
         'Authorization: <authorization>',
-        'Content-Length: 0',
+        'Content-Type: <content_type>',
+        'Content-Length: <content_length>',
         '',
-        '',
+        '<body>',
     ]),
     'response': '\r\n'.join([
         'SIP/2.0 <response_code> <response_reason>',
@@ -66,6 +68,7 @@ default_headers = {
     'To',
     'CSeq',
     'Max-Forwards',
+    'Contact',
 }
 
 
@@ -132,6 +135,14 @@ class SipFrame():
             frame['remote_domainname'] = domain
             frame['remote_tag'] = re.search(
                 r'(;tag=.+)', frame['from']).groups()[0]
+        if 'response' == frame['kind']:
+            user, domain = re.search(
+                r'<sip:(\d+)@([\d\.]+)>', frame['header']['To']).groups()
+            frame['remote_username'] = user
+            frame['remote_domainname'] = domain
+            if ';tag=' in frame['header']['To']:
+                frame['remote_tag'] = re.search(
+                    r'(;tag=.+)', frame['header']['To']).groups()[0]
 
         www_authenticate = frame['header'].get('WWW-Authenticate')
         if www_authenticate:

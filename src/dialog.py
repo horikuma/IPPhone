@@ -8,6 +8,7 @@ from sipframe import SipFrame
 
 class Dialog:
     def __init__(self, config):
+        self.retry_count = 0
         self.server_address = config['server_address']
 
         user, domain, port = config['local_uri']
@@ -16,12 +17,15 @@ class Dialog:
             'local_username': user,
             'local_domainname': domain,
             'local_port': port,
+            'password': config['password'],
         })
 
         self.machine = lib.build_statemachine(self)
         event.regist('recv_request', self.exec)
+        event.regist('recv_response', self.exec)
         event.regist('answer', self.exec)
         event.regist('hangup', self.exec)
+        event.regist('new_call', self.exec)
         self.boot()
 
     def exec(self, event_id, params):
@@ -29,6 +33,21 @@ class Dialog:
 
     def init__boot(self):
         self.to_idle()
+
+    def idle__new_call(self, params):
+        local_domainname = self.frame.get('local_domainname')
+        self.frame.update({
+            'callid': f'{lib.key(36)}@{local_domainname}',
+            'local_tag': f';tag={lib.key(36)}',
+            'remote_username': '6003',
+            'remote_domainname': local_domainname,
+            'remote_tag': '',
+        })
+        key = 'local_cseq_number'
+        self.frame.set(key, self.frame.get(key) + 1)
+        sdp = rtp.get_sdp(local_domainname)
+        self.send_request('INVITE', sdp)
+        self.to_call()
 
     def idle__recv_request(self, params):
         recv_frame = params[0]
@@ -47,6 +66,25 @@ class Dialog:
         self.send_response(self.recv_frame_invite, 180)
         self.to_ring()
 
+    def call__recv_response(self, params):
+        recv_frame = params[0]
+
+        if not 'INVITE' == recv_frame.get('method'):
+            return
+
+        response_code = recv_frame.get('response_code')
+        if 200 == response_code:
+            self.retry_count = 0
+            self.frame.set('remote_tag', recv_frame.get('remote_tag'))
+            self.send_request('ACK')
+            self.to_comm()
+        elif 401 == response_code:
+            self.retry(params)
+        elif 486 == response_code:
+            self.frame.set('remote_tag', recv_frame.get('remote_tag'))
+            self.send_request('ACK')
+            self.to_idle()
+
     def ring__answer(self, params):
         local_domainname = self.frame.get('local_domainname')
         sdp = rtp.get_sdp(local_domainname)
@@ -64,6 +102,8 @@ class Dialog:
         self.to_idle()
 
     def comm__hangup(self, params):
+        key = 'local_cseq_number'
+        self.frame.set(key, self.frame.get(key) + 1)
         self.send_request('BYE')
         self.to_idle()
 
@@ -82,15 +122,48 @@ class Dialog:
         self.send_response(recv_frame, 200)
         self.to_idle()
 
-    def send_request(self, method):
-        key = 'local_cseq_number'
-        self.frame.set(key, self.frame.get(key) + 1)
+    def retry(self, params):
+        recv_frame = params[0]
+
+        self.retry_count += 1
+        if not 1 == self.retry_count:
+            return
+
+        authorization_config = recv_frame.get('authenticate')
+        local_username = self.frame.get('local_username')
+        local_domainname = self.frame.get('remote_domainname')
+        authorization_config.update({
+            'method': 'INVITE',
+            'username': local_username,
+            'password': self.frame.get('password'),
+            'uri': f'sip:{local_username}@{local_domainname}',
+        })
+        authorization = lib.build_authorization(authorization_config)
+
+        sdp = rtp.get_sdp(local_domainname)
+        self.send_request('INVITE', sdp, authorization)
+
+    def send_request(self, method, sdp=None, authorization=None):
         self.frame.set('branch', f';branch=z9hG4bK{lib.key(10)}'),
         send_frame = self.frame.copy()
         send_frame.update({
             'kind': 'request',
             'method': method,
         })
+        if sdp:
+            send_frame.update({
+                'content_type': 'application/sdp',
+                'content_length': len(sdp),
+                'add_header': {'Content-Type', 'Content-Length'},
+                'body': sdp,
+            })
+            if authorization:
+                send_frame.update({
+                    'authorization': authorization,
+                    'add_header': {'Content-Type', 'Content-Length', 'Authorization'},
+                })
+        else:
+            send_frame.set('body', '')
         event.put('send_request', (
             send_frame,
             self.server_address,

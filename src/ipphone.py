@@ -18,6 +18,8 @@ def cmd():
         event.put('answer')
     elif 'h' == c:
         event.put('hangup')
+    elif 'm' == c:
+        event.put('new_call')
     elif '+a' == c:
         event.put('regist')
     elif 'q' == c:
