@@ -95,6 +95,10 @@ class Dialog:
         self.send_response(self.recv_frame_invite, 200, sdp)
         self.to_comm()
 
+    def ring__hangup(self, params):
+        self.send_response(self.recv_frame_invite, 486)
+        self.to_idle()
+
     def ring__recv_request(self, params):
         recv_frame = params[0]
 
