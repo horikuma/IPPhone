@@ -66,6 +66,10 @@ class Dialog:
         self.send_response(self.recv_frame_invite, 180)
         self.to_ring()
 
+    def call__hangup(self, params):
+        self.send_request('CANCEL', branch=False)
+        self.to_cancel()
+
     def call__recv_response(self, params):
         recv_frame = params[0]
 
@@ -122,6 +126,18 @@ class Dialog:
         self.send_response(recv_frame, 200)
         self.to_idle()
 
+    def cancel__recv_response(self, params):
+        recv_frame = params[0]
+
+        if not 'INVITE' == recv_frame.get('method'):
+            return
+
+        response_code = recv_frame.get('response_code')
+        if 487 == response_code:
+            self.frame.set('remote_tag', recv_frame.get('remote_tag'))
+            self.send_request('ACK', branch=False)
+            self.to_idle()
+
     def retry(self, params):
         recv_frame = params[0]
 
@@ -143,8 +159,9 @@ class Dialog:
         sdp = rtp.get_sdp(local_domainname)
         self.send_request('INVITE', sdp, authorization)
 
-    def send_request(self, method, sdp=None, authorization=None):
-        self.frame.set('branch', f';branch=z9hG4bK{lib.key(10)}'),
+    def send_request(self, method, sdp=None, authorization=None, branch=True):
+        if branch:
+            self.frame.set('branch', f';branch=z9hG4bK{lib.key(10)}'),
         send_frame = self.frame.copy()
         send_frame.update({
             'kind': 'request',
