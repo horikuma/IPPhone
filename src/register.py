@@ -30,7 +30,7 @@ class Register:
         self.machine = lib.build_statemachine(self)
         event.regist('regist', self.exec)
         event.regist('recv_response', self.exec)
-        event.regist('register_timer', self.exec)
+        event.regist('timer', self.exec)
         self.boot()
 
     def exec(self, event_id, params):
@@ -66,7 +66,7 @@ class Register:
             expires = recv_frame.get('Expires')
             if expires:
                 self.frame.set('expires', int(expires))
-            event.put('register_timer', delay=int(expires) // 2)
+            event.put('timer', delay=int(expires) // 2, send_to=self.exec)
             self.to_registered()
         if 401 == response_code:
             self.retry(params)
@@ -103,7 +103,7 @@ class Register:
             self.server_address,
         ))
 
-    def registered__register_timer(self, params):
+    def registered__timer(self, params):
         event.put('regist')
         self.to_idle()
 

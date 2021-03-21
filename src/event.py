@@ -24,20 +24,21 @@ def regist(event_id, hook, priority=MIDDLE):
     log.syslog(f'イベントハンドラ登録:{event_id}')
 
 
-def put(event_id, params=None, delay=None, put_from=None):
+def put(event_id, params=None, delay=None, put_from=None, send_to=None):
     if not put_from:
         filepath = inspect.currentframe().f_back.f_code.co_filename
         filename = re.search(r'([^/]+).py', filepath).group(1)
         funcname = inspect.getframeinfo(inspect.currentframe().f_back).function
         put_from = f'{filename}.{funcname}'
     if not delay:
-        event_queue.put((event_id, params, put_from))
+        event_queue.put((event_id, params, put_from, send_to))
     else:
-        threading.Timer(delay, put, (event_id, params, None, put_from)).start()
+        threading.Timer(delay, put,
+                        (event_id, params, None, put_from, send_to)).start()
 
 
 def exec():
-    event_id, params, put_from = event_queue.get()
+    event_id, params, put_from, send_to = event_queue.get()
     if not event_id in event_hooks:
         log.syslog(log.LOG_WARNING, f'イベントフック未登録:{event_id}')
         return
@@ -46,6 +47,8 @@ def exec():
     heapq.heapify(event_hook)
     while event_hook:
         *_, h = heapq.heappop(event_hook)
+        if send_to and (send_to == '*' or not send_to == h):
+            continue
         log.syslog(
             f'event_id: {event_id} ({put_from} -> {h.__module__}.{h.__name__})')
         h(event_id, params)
