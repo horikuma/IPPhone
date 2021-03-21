@@ -46,6 +46,7 @@ class Register:
         send_frame.update({
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
+            'body': '',
         })
         event.put('send_request', (
             send_frame,
@@ -94,7 +95,8 @@ class Register:
             'branch': f';branch=z9hG4bK{lib.key(10)}',
             'local_tag': f';tag={lib.key(36)}',
             'authorization': authorization,
-            'add_header': {'Authorization', 'Expires', 'Contact'},
+            'add_header': {'Authorization', 'Expires'},
+            'body': '',
         })
         event.put('send_request', (
             send_frame,
