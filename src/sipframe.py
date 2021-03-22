@@ -187,3 +187,41 @@ class SipFrame():
             template_frame['body'],
         ])
         return message
+
+    def set_request(self, frame, method, sdp, authorization):
+        self.frame.update({
+            'kind': 'request',
+            'method': method,
+        })
+        if sdp:
+            self.frame.update({
+                'content_type': 'application/sdp',
+                'content_length': len(sdp),
+                'add_header': {'Content-Type', 'Content-Length'},
+                'body': sdp,
+            })
+            if authorization:
+                self.frame.update({
+                    'authorization': authorization,
+                    'add_header': {'Content-Type', 'Content-Length', 'Authorization'},
+                })
+        else:
+            self.frame.update({'body': ''})
+
+    def set_response(self, frame, response_code):
+        self.frame.update({
+            'kind': 'response',
+            'response_code': response_code,
+            'local_tag': frame.get('local_tag'),
+            'local_username': frame.get('local_username'),
+            'local_domainname': frame.get('local_domainname'),
+            'local_port': frame.get('local_port'),
+            'body': '',
+        })
+        if sdp:
+            send_frame.update({
+                'content_type': 'application/sdp',
+                'content_length': len(sdp),
+                'add_header': {'Content-Type', 'Content-Length'},
+                'body': sdp,
+            })

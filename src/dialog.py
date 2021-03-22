@@ -167,24 +167,7 @@ class Dialog:
         if branch:
             self.frame.set('branch', f';branch=z9hG4bK{lib.key(10)}'),
         send_frame = self.frame.copy()
-        send_frame.update({
-            'kind': 'request',
-            'method': method,
-        })
-        if sdp:
-            send_frame.update({
-                'content_type': 'application/sdp',
-                'content_length': len(sdp),
-                'add_header': {'Content-Type', 'Content-Length'},
-                'body': sdp,
-            })
-            if authorization:
-                send_frame.update({
-                    'authorization': authorization,
-                    'add_header': {'Content-Type', 'Content-Length', 'Authorization'},
-                })
-        else:
-            send_frame.set('body', '')
+        send_frame.set_request(self.frame, method, sdp, authorization)
         event.put('send_request', (
             send_frame,
             self.server_address,
@@ -192,22 +175,7 @@ class Dialog:
 
     def send_response(self, recv_frame, response_code, sdp=None):
         send_frame = recv_frame.copy()
-        send_frame.update({
-            'kind': 'response',
-            'response_code': response_code,
-            'local_tag': self.frame.get('local_tag'),
-            'local_username': self.frame.get('local_username'),
-            'local_domainname': self.frame.get('local_domainname'),
-            'local_port': self.frame.get('local_port'),
-            'body': '',
-        })
-        if sdp:
-            send_frame.update({
-                'content_type': 'application/sdp',
-                'content_length': len(sdp),
-                'add_header': {'Content-Type', 'Content-Length'},
-                'body': sdp,
-            })
+        send_frame.set_response(self.frame, response_code, sdp)
         event.put('send_response', (
             send_frame,
             self.server_address,
