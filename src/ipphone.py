@@ -7,6 +7,7 @@ import threading
 
 import com
 import dialog
+import display
 import drv
 import event
 import register as reg
@@ -45,6 +46,7 @@ def main():
     drv.init(config)
     reg.init(config)
     dialog.init(config)
+    display.init()
 
     threading.Thread(target=drv.recv, daemon=True).start()
     threading.Thread(target=event.main, daemon=True).start()
