@@ -4,8 +4,10 @@ import heapq
 import inspect
 import queue
 import re
-import syslog as log
 import threading
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 event_queue = None
 event_hooks = None
@@ -21,7 +23,7 @@ def regist(event_id, hook, priority=MIDDLE):
         event_hooks[event_id] = []
     event_hooks[event_id].append(
         (priority, hook.__module__, hook.__name__, hook))
-    log.syslog(f'イベントハンドラ登録:{event_id}')
+    logger.debug(f'イベントハンドラ登録:{event_id}')
 
 
 def put(event_id, params=None, delay=None, put_from=None, send_to=None):
@@ -40,7 +42,7 @@ def put(event_id, params=None, delay=None, put_from=None, send_to=None):
 def exec():
     event_id, params, put_from, send_to = event_queue.get()
     if not event_id in event_hooks:
-        log.syslog(log.LOG_WARNING, f'イベントフック未登録:{event_id}')
+        logger.debug(f'イベントフック未登録:{event_id}')
         return
 
     event_hook = event_hooks[event_id] + event_hooks['*']
@@ -49,7 +51,7 @@ def exec():
         *_, h = heapq.heappop(event_hook)
         if send_to and (send_to == '*' or not send_to == h):
             continue
-        log.syslog(
+        logger.debug(
             f'event_id: {event_id} ({put_from} -> {h.__module__}.{h.__name__})')
         h(event_id, params)
 

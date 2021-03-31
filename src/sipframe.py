@@ -208,7 +208,7 @@ class SipFrame():
         else:
             self.frame.update({'body': ''})
 
-    def set_response(self, frame, response_code):
+    def set_response(self, frame, response_code, sdp):
         self.frame.update({
             'kind': 'response',
             'response_code': response_code,
@@ -219,7 +219,7 @@ class SipFrame():
             'body': '',
         })
         if sdp:
-            send_frame.update({
+            self.frame.update({
                 'content_type': 'application/sdp',
                 'content_length': len(sdp),
                 'add_header': {'Content-Type', 'Content-Length'},

@@ -2,8 +2,8 @@
 
 import os
 import sys
-import syslog as log
 import threading
+from logging import DEBUG, WARN, basicConfig, getLogger
 
 import com
 import dialog
@@ -11,6 +11,9 @@ import display
 import drv
 import event
 import register as reg
+
+basicConfig(level=DEBUG)
+logger = getLogger(__name__)
 
 
 def cmd():
@@ -29,8 +32,8 @@ def cmd():
 
 
 def main():
-    log.openlog('IPPhone', log.LOG_PERROR)
-    log.syslog('開始')
+    logger.debug('IPPhone')
+    logger.debug('開始')
 
     server_address = os.environ['SERVER_ADDRESS']
     config = {
@@ -54,8 +57,7 @@ def main():
     while cmd():
         pass
 
-    log.syslog('終了')
-    log.closelog()
+    logger.debug('終了')
 
 
 if __name__ == '__main__':
