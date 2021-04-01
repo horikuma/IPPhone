@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
+import logging
 import random
 import re
 import string
 from hashlib import md5
 
 from transitions import Machine
+
+logging.getLogger('transitions').setLevel(logging.ERROR)
 
 
 def key(length):
