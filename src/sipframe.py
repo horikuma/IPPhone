@@ -11,40 +11,32 @@ response_reason = {
 }
 
 message_template = {
-    'request': '\r\n'.join([
-        '<method> sip:<remote_username>@<remote_domainname> SIP/2.0',
-        'Via: SIP/2.0/UDP <local_domainname>:<local_port><branch>',
-        'Max-Forwards: 70',
-        'From: <sip:<local_username>@<local_domainname>><local_tag>',
-        'To: <sip:<remote_username>@<remote_domainname>><remote_tag>',
-        'Call-ID: <callid>',
-        'CSeq: <local_cseq_number> <method>',
-        'User-Agent: horikuma IPPhone',
-        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
-        'Expires: <expires>',
-        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
-        'Authorization: <authorization>',
-        'Content-Type: <content_type>',
-        'Content-Length: <content_length>',
-        '',
-        '<body>',
-    ]),
-    'response': '\r\n'.join([
-        'SIP/2.0 <response_code> <response_reason>',
-        'Via: <via>',
-        'Max-Forwards: 70',
-        'From: <from>',
-        'To: <sip:<local_username>@<local_domainname>><local_tag>',
-        'Call-ID: <callid>',
-        'CSeq: <remote_cseq_number> <method>',
-        'User-Agent: horikuma IPPhone',
-        'Contact: <sip:<local_username>@<local_domainname>:<local_port>>',
-        'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
-        'Content-Type: <content_type>',
-        'Content-Length: <content_length>',
-        '',
-        '<body>',
-    ])
+    'request': {
+        'start-line': lambda frame: lib.replace_all('<method> sip:<remote_username>@<remote_domainname> SIP/2.0', frame),
+        'Via': lambda frame: lib.replace_all('Via: SIP/2.0/UDP <local_domainname>:<local_port><branch>', frame),
+        'From': lambda frame: lib.replace_all('From: <sip:<local_username>@<local_domainname>><local_tag>', frame),
+        'To': lambda frame: lib.replace_all('To: <sip:<remote_username>@<remote_domainname>><remote_tag>', frame),
+        'CSeq': lambda frame: lib.replace_all('CSeq: <local_cseq_number> <method>', frame),
+    },
+    'response': {
+        'start-line': lambda frame: lib.replace_all('SIP/2.0 <response_code> <response_reason>', frame),
+        'Via': lambda frame: lib.replace_all('Via: <via>', frame),
+        'From': lambda frame: lib.replace_all('From: <from>', frame),
+        'To': lambda frame: lib.replace_all('To: <sip:<local_username>@<local_domainname>><local_tag>', frame),
+        'CSeq': lambda frame: lib.replace_all('CSeq: <remote_cseq_number> <method>', frame),
+    },
+    'common': {
+        'Max-Forwards': lambda _: 'Max-Forwards: 70',
+        'Call-ID': lambda frame: lib.replace_all('Call-ID: <callid>', frame),
+        'User-Agent': lambda _: 'User-Agent: horikuma IPPhone',
+        'Contact': lambda frame: lib.replace_all('Contact: <sip:<local_username>@<local_domainname>:<local_port>>', frame),
+        'Expires': lambda frame: lib.replace_all('Expires: <expires>', frame),
+        'Allow': lambda _: 'Allow: INVITE, ACK, BYE, CANCEL, UPDATE',
+        'Authorization': lambda frame: lib.replace_all('Authorization: <authorization>', frame),
+        'Content-Type': lambda frame: lib.replace_all('Content-Type: <content_type>', frame),
+        'Content-Length': lambda frame: lib.replace_all('Content-Length: <content_length>', frame),
+        'body': lambda frame: frame['body'],
+    },
 }
 
 headder_priority = [
@@ -157,14 +149,9 @@ class SipFrame():
 
     def to_message(self):
         frame = self.frame
-        if 'response_code' in frame:
-            frame.update({
-                'response_reason': response_reason[frame['response_code']],
-            })
 
-        template_message = lib.replace_all(
-            message_template[self.frame['kind']], frame)
-        template_frame = self.parse_message(template_message)
+        template = message_template[self.frame['kind']].copy()
+        template.update(message_template['common'])
 
         header = ''
         headers = default_headers.copy()
@@ -175,16 +162,12 @@ class SipFrame():
         for h in headder_priority:
             if not h in headers:
                 continue
-            if not h in template_frame['header']:
-                continue
-            if not template_frame['header'][h]:
-                continue
-            header += f'{h}: {template_frame["header"][h]}\r\n'
+            header += template[h](frame) + '\r\n'
 
         message = '\r\n'.join([
-            template_frame['start-line'],
+            template['start-line'](frame),
             header,
-            template_frame['body'],
+            template['body'](frame),
         ])
         return message
 
@@ -212,6 +195,7 @@ class SipFrame():
         self.frame.update({
             'kind': 'response',
             'response_code': response_code,
+            'response_reason': response_reason[response_code],
             'local_tag': frame.get('local_tag'),
             'local_username': frame.get('local_username'),
             'local_domainname': frame.get('local_domainname'),
